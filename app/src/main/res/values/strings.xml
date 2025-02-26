@@ -1,3 +1,7 @@
 <resources>
-    <string name="app_name">FinalProjectYali</string>
+    <string name="app_name">EasyShop</string>
+    <string name="go_to_sign_up">go to sign up!</string>
+    <string name="cart_logo">logo of the app\n</string>
+    <string name="navigation_drawer_open">Open navigation bar</string>
+    <string name="navigation_drawer_close">Close navigation bar</string>
 </resources>
