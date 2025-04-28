@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <item
+        android:id="@+id/profile"
+        android:icon="@drawable/ic_baseline_person"
+        android:title="My Profile"
+        android:contentDescription="profile page"
+        />
+
+    <item
+        android:id="@+id/fab"
+        android:title=""
+        android:contentDescription="Add Group"
+        android:enabled="false"/>
+    <item
+        android:id="@+id/homescreen"
+        android:icon="@drawable/ic_baseline_home"
+        android:title="Groups"
+        android:contentDescription="Homepage"/>
+</menu>

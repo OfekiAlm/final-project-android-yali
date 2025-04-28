@@ -34,54 +34,52 @@
         android:layout_height="wrap_content"
         android:text="Sign In to continue"
         android:textSize="18sp"/>
-<!--    <LinearLayout-->
-<!--        android:layout_width="match_parent"-->
-<!--        android:layout_height="wrap_content"-->
-<!--        android:layout_marginTop="20dp"-->
-<!--        android:layout_marginBottom="20dp"-->
-<!--        android:orientation="vertical">-->
-<!--        <com.google.android.material.textfield.TextInputLayout-->
-<!--            android:layout_width="match_parent"-->
-<!--            android:layout_height="wrap_content"-->
-<!--            app:startIconDrawable="@drawable/ic_baseline_contact_mail"-->
-<!--            android:hint="Email"-->
-<!--            style="Widget.MaterialComponents.TextInputLayout.OutlinedBox">-->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="20dp"
+        android:layout_marginBottom="20dp"
+        android:orientation="vertical">
+        <com.google.android.material.textfield.TextInputLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="Email"
+            style="Widget.MaterialComponents.TextInputLayout.OutlinedBox">
 
-<!--            <com.google.android.material.textfield.TextInputEditText-->
-<!--                android:layout_width="match_parent"-->
-<!--                android:layout_height="wrap_content"-->
-<!--                android:minHeight="48dp"-->
-<!--                android:id="@+id/editTextTextEmailAddress_Register"-->
-<!--                />-->
-<!--        </com.google.android.material.textfield.TextInputLayout>-->
-<!--        <com.google.android.material.textfield.TextInputLayout-->
-<!--            android:layout_width="match_parent"-->
-<!--            android:layout_height="wrap_content"-->
-<!--            app:startIconDrawable="@drawable/ic_baseline_password"-->
-<!--            android:hint="Password"-->
-<!--            app:passwordToggleEnabled="true"-->
-<!--            android:layout_marginTop="10dp"-->
-<!--            style="Widget.MaterialComponents.TextInputLayout.OutlinedBox">-->
+            <com.google.android.material.textfield.TextInputEditText
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:minHeight="48dp"
+                android:id="@+id/editTextTextEmailAddress_Register"
+                />
+        </com.google.android.material.textfield.TextInputLayout>
+        <com.google.android.material.textfield.TextInputLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="Password"
+            app:passwordToggleEnabled="true"
+            android:layout_marginTop="10dp"
+            style="Widget.MaterialComponents.TextInputLayout.OutlinedBox">
 
-<!--            <com.google.android.material.textfield.TextInputEditText-->
-<!--                android:layout_width="match_parent"-->
-<!--                android:layout_height="wrap_content"-->
-<!--                android:id="@+id/editTextTextPassword_Register"-->
-<!--                android:minHeight="48dp"-->
-<!--                android:inputType="textPassword" />-->
-<!--        </com.google.android.material.textfield.TextInputLayout>-->
-<!--        <Button-->
-<!--            android:layout_width="match_parent"-->
-<!--            android:layout_height="wrap_content"-->
-<!--            android:text="GO"-->
-<!--            android:id="@+id/submit_form"-->
-<!--            android:onClick="login"-->
-<!--            android:backgroundTint="@color/grey_blue"-->
-<!--            android:textColor="#ffffff"-->
-<!--            android:layout_marginTop="5dp"-->
-<!--            android:layout_marginBottom="5dp"/>-->
+            <com.google.android.material.textfield.TextInputEditText
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:id="@+id/editTextTextPassword_Register"
+                android:minHeight="48dp"
+                android:inputType="textPassword" />
+        </com.google.android.material.textfield.TextInputLayout>
+        <Button
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="GO"
+            android:id="@+id/submit_form"
+            android:onClick="login"
+            android:backgroundTint="@color/black"
+            android:textColor="#ffffff"
+            android:layout_marginTop="5dp"
+            android:layout_marginBottom="5dp"/>
 
-<!--    </LinearLayout>-->
+    </LinearLayout>
 
     <LinearLayout
         android:layout_width="match_parent"

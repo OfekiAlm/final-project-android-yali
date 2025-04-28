@@ -17,6 +17,7 @@ import android.widget.Toast;
 
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
+import com.google.firebase.FirebaseApp;
 import com.google.firebase.FirebaseNetworkException;
 import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
@@ -55,19 +56,19 @@ public class LoginActivity extends AppCompatActivity {
 
         mAuth = FirebaseAuth.getInstance();
 
-//        init();
+        init();
     }
 
     /**
      * Initializes the views and listeners for the activity.
      */
-//    private void init(){
-//        editTextEmail = (TextInputEditText) findViewById(R.id.editTextTextEmailAddress_Register);
-//        editTextpassword = (TextInputEditText) findViewById(R.id.editTextTextPassword_Register);
-//        TextView moveToRegister = findViewById(R.id.move_screen);
-//
-//        moveToRegister.setOnClickListener(view -> startActivity(new Intent(LoginActivity.this, RegisterActivity.class)));
-//    }
+    private void init(){
+        editTextEmail = (TextInputEditText) findViewById(R.id.editTextTextEmailAddress_Register);
+        editTextpassword = (TextInputEditText) findViewById(R.id.editTextTextPassword_Register);
+        TextView moveToRegister = findViewById(R.id.move_screen);
+
+        moveToRegister.setOnClickListener(view -> startActivity(new Intent(LoginActivity.this, RegisterActivity.class)));
+    }
 
     /**
      * Validates user input for email and password fields.
