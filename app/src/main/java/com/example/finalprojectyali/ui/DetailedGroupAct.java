@@ -8,6 +8,7 @@ import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 
+import com.example.finalprojectyali.Extras.GroupRepository;
 import com.example.finalprojectyali.Extras.GuiderDialog;
 import com.example.finalprojectyali.Models.Group;
 import com.example.finalprojectyali.R;
@@ -17,6 +18,7 @@ import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 
+import java.util.ArrayList;
 import java.util.Locale;
 
 /**
@@ -58,11 +60,6 @@ public class DetailedGroupAct extends AppCompatActivity {
     String userChoice;
 
     /**
-     * A reference to the Firebase Realtime Database.
-     */
-    DatabaseReference listRef;
-
-    /**
      * Called when the activity is starting. Sets up the views and initializes the group.
      * @param savedInstanceState The saved state of the activity, if any.
      */
@@ -74,6 +71,7 @@ public class DetailedGroupAct extends AppCompatActivity {
         init();
         group = new Group();
         determineEditOrAdd(fromActivity);
+
         GuiderDialog gd = new GuiderDialog(this, "DetailedGroupAct", "This is an explanation for you 😀");
         gd.startDialog();
 
@@ -85,6 +83,11 @@ public class DetailedGroupAct extends AppCompatActivity {
             } else if (counter >= 2) {
                 if (userChoice.equals("AddGroup")) {
                     //addGroupToFirebase();
+                    GroupRepository.createGroup(
+                            "Friday BBQ", "Who brings what?", new ArrayList<>(),
+                            g  -> Log.d("TEST", "Group created: " + g.getKey()),
+                            err -> Log.e("TEST", err.getMessage())
+                    );
                     finish();
                 } else {
                     //updateGroupToFirebase();

@@ -105,7 +105,7 @@ public class ProfileFragment extends Fragment {
             if(imageBitmap !=null)
                 circleImageView.setImageBitmap(imageBitmap);
             //Toast.makeText(getActivity(), "successfully loaded your profile credentials", Toast.LENGTH_LONG).show();
-        }).addOnFailureListener(exception -> Toast.makeText(getContext(), "fail", Toast.LENGTH_LONG).show());
+        }).addOnFailureListener(exception -> Toast.makeText(getContext(), "there's no image in firebase stroage for user", Toast.LENGTH_LONG).show());
     }
 
     /**

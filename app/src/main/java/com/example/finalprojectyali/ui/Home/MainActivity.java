@@ -47,6 +47,8 @@ import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 
+import java.util.ArrayList;
+
 /**
  * MainActivity is the main screen of the app, containing a navigation drawer with various options,
  * a bottom navigation bar, and a floating action button for adding tasks or rewards based on the fragments. It also
@@ -98,7 +100,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         super.onCreate(savedInstanceState);
         current_user = new User();
         getUserDetails(this);
-        GroupRepository.isCurrentUserOwner("dummy", any -> {}); // forces class init – optional
+
         init();
 
         GuiderDialog guiderDialog = new GuiderDialog(this,"MainActivity","Hello there,\nYou're new here. Let me guide you through the pages of the app, What's behind me is the first and the main screen. You can add tasks at the plus button at the bottom of the screen and also navigate to another screens.");
@@ -138,6 +140,13 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             return true;
         });
         navdrawer_init();
+        // TODO: fix this.
+//        GroupRepository.isCurrentUserOwner("dummy", any -> {}); // forces class init – optional
+//        GroupRepository.createGroup(
+//                "Friday BBQ", "Who brings what?", new ArrayList<>(),
+//                g  -> Log.d("TEST", "Group created: " + g.getKey()),
+//                err -> Log.e("TEST", err.getMessage())
+//        );
     }
 
     /**
@@ -340,6 +349,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
      */
     @Override
     public void onUserDetailsReceived() {
-        xpDisplayTv.setText(""+ current_user.getName());
+        xpDisplayTv.setText("Hi, "+ current_user.getName());
     }
 }
