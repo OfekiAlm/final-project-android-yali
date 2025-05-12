@@ -1,12 +1,10 @@
 package com.example.finalprojectyali.Extras;
 
-import static com.google.android.gms.tasks.Task.*;
 import static com.google.firebase.database.Transaction.*;
 
 import androidx.annotation.NonNull;
 
 import com.example.finalprojectyali.Models.Group;
-import com.example.finalprojectyali.Extras.Utils.JoinCodeUtil;
 import com.example.finalprojectyali.Models.Ingredient;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.FirebaseAuth;
@@ -15,9 +13,13 @@ import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.MutableData;
-import com.google.firebase.database.Transaction;
 import com.google.android.gms.tasks.*;
+import com.google.firebase.database.Transaction;
+
+import java.security.SecureRandom;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.function.Consumer;
 
 public final class GroupRepository {
@@ -25,35 +27,46 @@ public final class GroupRepository {
     private static final DatabaseReference ROOT = FirebaseDatabase.getInstance().getReference();
     private static final DatabaseReference GROUPS = ROOT.child("groups");
     private static final DatabaseReference JOIN_CODES = ROOT.child("joinCodes");
+    private static final SecureRandom RNG = new SecureRandom();
+    private static final String ALPHA_NUM = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+
 
     /* ------------------------------------------------------------------ */
     /* 1. Create a new group  (collision-safe join-code)                  */
     /* ------------------------------------------------------------------ */
-    public static Task<Void> createGroup(String name,
-                                         String description,
-                                         List<Ingredient> ingredients,
-                                         @NonNull Consumer<Group> onSuccess,
-                                         @NonNull Consumer<Exception> onError)
-    {
-        String uid = FirebaseAuth.getInstance().getUid();
+    public static Task<Group> createGroup(String name,
+                                          String description,
+                                          List<Ingredient> ingredients,
+                                          @NonNull Consumer<Group> onSuccess,
+                                          @NonNull Consumer<Exception> onError) {
+
+        String uid     = FirebaseAuth.getInstance().getUid();
         String pushKey = GROUPS.push().getKey();
-        String joinCode = generateUniqueCodeBlocking();   // 99.9 % of apps fine with blocking loop
 
-        Group g = new Group(name, description, uid, joinCode, ingredients);
-        g.setKey(pushKey);
+        return generateUniqueCodeAsync()
+                .continueWithTask(codeTask -> {
 
-        return GROUPS.child(pushKey).setValue(g).continueWithTask(task -> {
-                    if (!task.isSuccessful()) throw task.getException();
+                    if (!codeTask.isSuccessful())
+                        return Tasks.forException(codeTask.getException());
 
-                    // 1) /joinCodes/{code} → groupId   (so others can “lookup”)
-                    // 2) /Users/{uid}/Groups/{groupId} = true  (creator membership shortcut)
-                    Task<?> t1 = JOIN_CODES.child(joinCode).setValue(pushKey);
-                    Task<?> t2 = ROOT.child("Users").child(uid)
-                            .child("Groups").child(pushKey).setValue(true);
-                    return Tasks.whenAll(t1, t2);
-                }).addOnSuccessListener(v -> onSuccess.accept(g))
+                    String joinCode = codeTask.getResult();
+
+                    Group g = new Group(name, description, uid, joinCode, ingredients);
+                    g.setKey(pushKey);
+
+                    Map<String,Object> fanOut = new HashMap<>();
+                    fanOut.put("/Groups/" + pushKey, g);
+                    fanOut.put("/joinCodes/" + joinCode, pushKey);
+                    fanOut.put("/Users/" + uid + "/Groups/" + pushKey, true);
+
+                    // propagate the Group object forward so callers get it
+                    return ROOT.updateChildren(fanOut).continueWith(t -> g);
+                })
+                .addOnSuccessListener(onSuccess::accept)
                 .addOnFailureListener(onError::accept);
     }
+
+
 
     /* ------------------------------------------------------------------ */
     /* 2. Join existing group via code                                    */
@@ -125,12 +138,56 @@ public final class GroupRepository {
     }
 
     /* utility */
-    private static String generateUniqueCodeBlocking() {
-        while (true) {
-            String c = JoinCodeUtil.generateCode();
-            if (!JOIN_CODES.child(c).get().getResult().exists()) return c;
-        }
+    private static String randomCode() {
+        char[] buf = new char[4];
+        for (int i = 0; i < 4; i++)
+            buf[i] = ALPHA_NUM.charAt(RNG.nextInt(ALPHA_NUM.length()));
+        return new String(buf);
     }
 
+    /** Generates a 4-char code that is guaranteed unique under /joinCodes */
+    private static Task<String> generateUniqueCodeAsync() {
+
+        TaskCompletionSource<String> tcs = new TaskCompletionSource<>();
+
+        attemptReserveCode(tcs);   // recursion happens inside this helper
+
+        return tcs.getTask();      // the Task<String> the rest of the code awaits
+    }
+
+    private static void attemptReserveCode(TaskCompletionSource<String> tcs) {
+
+        String code = randomCode();
+        DatabaseReference codeRef = JOIN_CODES.child(code);
+
+        codeRef.runTransaction(new Transaction.Handler() {
+
+            @NonNull @Override
+            public Transaction.Result doTransaction(@NonNull MutableData current) {
+                if (current.getValue() != null) {             // collision – abort
+                    return Transaction.abort();
+                }
+                current.setValue(true);                       // reserve
+                return Transaction.success(current);
+            }
+
+            @Override
+            public void onComplete(DatabaseError error,
+                                   boolean committed,
+                                   DataSnapshot snapshot) {
+
+                if (error != null) {                          // network / perms
+                    tcs.setException(error.toException());
+                    return;
+                }
+
+                if (committed) {                              // success – done
+                    tcs.setResult(code);
+                } else {                                      // collision – retry
+                    attemptReserveCode(tcs);
+                }
+            }
+        });
+    }
     private GroupRepository() {}
 }

@@ -22,6 +22,9 @@ import com.example.finalprojectyali.Adapters.GroupAdapter;
 import com.example.finalprojectyali.Extras.Utils;
 import com.example.finalprojectyali.Models.Group;
 import com.example.finalprojectyali.R;
+import com.example.finalprojectyali.ui.Home.GroupActivity;
+import com.google.android.gms.tasks.Task;
+import com.google.android.gms.tasks.Tasks;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
@@ -105,24 +108,62 @@ public class HomeFragment extends Fragment implements RecyclerViewFunctionalitie
 
     /**
      Retrieves the user's tasks from the Firebase Realtime Database and updates the RecyclerView.
-     @param recyclerViewFunctionalities An instance of the RecyclerViewFunctionalities interface.
+     @param cb An instance of the RecyclerViewFunctionalities interface.
      */
-    private void retrieveData(RecyclerViewFunctionalities recyclerViewFunctionalities) {
-        myRef.addValueEventListener(new ValueEventListener() {
+    private void retrieveData(RecyclerViewFunctionalities cb) {
+
+        // 1) path that holds only the booleans
+        DatabaseReference memberFlags = FirebaseDatabase.getInstance()
+                .getReference("Users")
+                .child(FirebaseAuth.getInstance().getUid())
+                .child("Groups");
+
+        memberFlags.addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot snapshot) {
-                groupsList = new ArrayList<Group>();
-                for(DataSnapshot data : snapshot.getChildren()){
-                    Group t = data.getValue(Group.class);
-                    groupsList.add(t);
+
+                List<Task<DataSnapshot>> lookups = new ArrayList<>();
+
+                // 2) build one read-task per groupId
+                for (DataSnapshot flag : snapshot.getChildren()) {
+                    String gid = flag.getKey();                      // "-OPWWG…"
+                    lookups.add(FirebaseDatabase.getInstance()
+                            .getReference("Groups")
+                            .child(gid)
+                            .get());
                 }
-                adapter = new GroupAdapter(getContext(),groupsList,recyclerViewFunctionalities);
-                recyclerView.setAdapter(adapter);
+
+                // 3) if user belongs to no groups, finish early
+                if (lookups.isEmpty()) {
+                    groupsList = new ArrayList<>();
+                    adapter = new GroupAdapter(getContext(), groupsList, cb);
+                    recyclerView.setAdapter(adapter);
+                    return;
+                }
+
+                // 4) wait until *all* /Groups/{gid} snapshots return
+                Tasks.whenAllSuccess(lookups)
+                        .addOnSuccessListener(results -> {
+                            groupsList = new ArrayList<>();
+                            for (Object obj : results) {
+                                DataSnapshot s = (DataSnapshot) obj;
+                                Group g = s.getValue(Group.class);
+                                if (g != null) groupsList.add(g);
+                            }
+
+                            if (adapter == null) {                      // first load
+                                adapter = new GroupAdapter(getContext(), groupsList, cb);
+                                recyclerView.setAdapter(adapter);
+                            } else {                                    // refresh
+                                adapter.notifyDataSetChanged();
+                            }
+                        })
+                        .addOnFailureListener(e ->
+                                Log.e("HomeFragment", "Loading groups failed", e));
             }
 
-            @Override
-            public void onCancelled(@NonNull DatabaseError error) {
-
+            @Override public void onCancelled(@NonNull DatabaseError error) {
+                Log.e("HomeFragment", "Flag listener cancelled", error.toException());
             }
         });
     }
@@ -167,6 +208,8 @@ public class HomeFragment extends Fragment implements RecyclerViewFunctionalitie
     @Override
     public void onItemClick(int position) {
         Log.d("TODO", "onItemClick: well well doesn't work yet");
+        Intent intent = new Intent(getContext(), GroupActivity.class);
+        startActivity(intent);
 //        Group t = new Group(
 //                tasksList.get(position).getName(),
 //                tasksList.get(position).getTime(),

@@ -42,20 +42,4 @@ public class Utils {
         }
         return false;
     }
-
-    public static final class JoinCodeUtil {
-        private static final String ALPHA_NUM = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
-        private static final SecureRandom RNG = new SecureRandom();
-
-        /** Generates a random 4-char code such as “A9B2”. */
-        public static String generateCode() {
-            StringBuilder sb = new StringBuilder(4);
-            for (int i = 0; i < 4; i++) {
-                sb.append(ALPHA_NUM.charAt(RNG.nextInt(ALPHA_NUM.length())));
-            }
-            return sb.toString();
-        }
-
-        private JoinCodeUtil() {/* no instances */}
-    }
 }

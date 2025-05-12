@@ -20,7 +20,9 @@
         android:supportsRtl="false"
         android:theme="@style/Theme.FinalProjectYali"
         tools:targetApi="31">
-
+        <activity
+            android:name=".ui.Home.GroupActivity"
+            android:exported="false" />
         <activity
             android:name=".Extras.SplashActivity"
             android:exported="true">
@@ -44,6 +46,7 @@
                 android:name="android.app.lib_name"
                 android:value="" />
         </activity>
+
         <receiver
             android:name=".Extras.Receivers.AirplaneModeReceiver"
             android:exported="true">
@@ -51,32 +54,37 @@
                 <action android:name="android.intent.action.AIRPLANE_MODE" />
             </intent-filter>
         </receiver>
+
         <activity
             android:name=".ui.Home.MainActivity"
             android:exported="true"
-            android:theme="@style/Theme.Design.NoActionBar"/>
+            android:theme="@style/Theme.Design.NoActionBar" />
         <activity
             android:name=".ui.Auth.LoginActivity"
             android:exported="true" />
         <activity
             android:name=".ui.Auth.RegisterActivity"
             android:exported="true" />
-
-        <activity android:name=".ui.JoinLink"
+        <activity
+            android:name=".ui.JoinLink"
             android:exported="true">
             <intent-filter>
-                <data android:scheme="myapp" android:host="join" />
-                <action android:name="android.intent.action.VIEW"/>
-                <category android:name="android.intent.category.DEFAULT"/>
-                <category android:name="android.intent.category.BROWSABLE"/>
+                <data
+                    android:host="join"
+                    android:scheme="myapp" />
+
+                <action android:name="android.intent.action.VIEW" />
+
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
             </intent-filter>
         </activity>
 
         <provider
             android:name="androidx.core.content.FileProvider"
-            android:authorities="com.example.solobeast.provider"
-            android:grantUriPermissions="true"
-            android:exported="false">
+            android:authorities="com.example.finalprojectyali.provider"
+            android:exported="false"
+            android:grantUriPermissions="true">
             <meta-data
                 android:name="android.support.FILE_PROVIDER_PATHS"
                 android:resource="@xml/file_paths" />

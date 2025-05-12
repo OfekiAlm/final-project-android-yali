@@ -1,0 +1,7 @@
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <item
+        android:id="@+id/action_edit_group"
+        android:icon="@drawable/baseline_more_vert_24"
+        android:title="Edit"
+        android:showAsAction="always"/>
+</menu>

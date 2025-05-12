@@ -9,4 +9,6 @@
     <string name="login_password">password</string>
     <string name="go_to_sign_up"><b><font color='#000000'>Not signed up already?</font></b> <b> <font color='#E1574C'>Register</font></b></string>
     <string name="group_members_count">Member Count </string>
+    <string name="ingredient_price_format">₪ %.2f / item</string>
+    <string name="ingredient_acquired_by">Acquired by: %1$s</string>
 </resources>

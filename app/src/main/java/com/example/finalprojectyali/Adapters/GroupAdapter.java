@@ -103,11 +103,6 @@ public class GroupAdapter extends RecyclerView.Adapter<GroupAdapter.GroupViewHol
         holder.groupCreationDateTextView.setText(formatDate(group.getCreationDate()));
         // Optional: Content description for date if needed
         holder.groupCreationDateTextView.setContentDescription("Group created on " + formatDate(group.getCreationDate()));
-
-        // Remove task-specific bindings (difficulty, time, background color)
-        // holder.difficultyTv.setText(task.getDifficulty());
-        // holder.constraintLayout.setBackgroundColor(Color.parseColor(changeColorAsTaskDifficulty(task.getDifficulty())));
-        // holder.timeTv.setText(timeRepresentation(task.getTime()));
     }
 
     /**

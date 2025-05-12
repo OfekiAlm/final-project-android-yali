@@ -83,11 +83,11 @@ public class DetailedGroupAct extends AppCompatActivity {
             } else if (counter >= 2) {
                 if (userChoice.equals("AddGroup")) {
                     //addGroupToFirebase();
-                    GroupRepository.createGroup(
-                            "Friday BBQ", "Who brings what?", new ArrayList<>(),
-                            g  -> Log.d("TEST", "Group created: " + g.getKey()),
-                            err -> Log.e("TEST", err.getMessage())
-                    );
+//                    GroupRepository.createGroup(
+//                            "Friday BBQ", "Who brings what?", new ArrayList<>(),
+//                            g  -> Log.d("TEST", "Group created: " + g.getKey()),
+//                            err -> Log.e("TEST", err.getMessage())
+//                    );
                     finish();
                 } else {
                     //updateGroupToFirebase();
