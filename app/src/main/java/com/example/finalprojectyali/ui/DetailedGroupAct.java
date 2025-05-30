@@ -11,6 +11,7 @@ import android.view.View;
 import com.example.finalprojectyali.Extras.GroupRepository;
 import com.example.finalprojectyali.Extras.GuiderDialog;
 import com.example.finalprojectyali.Models.Group;
+import com.example.finalprojectyali.Models.Ingredient;
 import com.example.finalprojectyali.R;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.textfield.TextInputEditText;
@@ -82,15 +83,25 @@ public class DetailedGroupAct extends AppCompatActivity {
                 setUpdateIconDrawable();
             } else if (counter >= 2) {
                 if (userChoice.equals("AddGroup")) {
-                    //addGroupToFirebase();
-//                    GroupRepository.createGroup(
-//                            "Friday BBQ", "Who brings what?", new ArrayList<>(),
-//                            g  -> Log.d("TEST", "Group created: " + g.getKey()),
-//                            err -> Log.e("TEST", err.getMessage())
-//                    );
+                    String name = groupNameTv.getText().toString();
+                    String desc = groupDescTv.getText().toString();
+                    ArrayList<Ingredient> ingredients = new ArrayList<>();
+
+                    GroupRepository.createGroup(
+                            name, desc, ingredients,
+                            g  -> Log.d("TEST", "Group created: " + g.getKey()),
+                            err -> Log.e("TEST", err.getMessage())
+                    );
                     finish();
+                } else if(userChoice.equals("EditGroup")){
+                    String name = groupNameTv.getText().toString();
+                    String desc = groupDescTv.getText().toString();
+                    GroupRepository.updateGroup(
+                            group.getKey(),name,desc,
+                            g  -> Log.d("TEST", "Group updated: " ),
+                            err -> Log.e("TEST", err.getMessage())
+                    );
                 } else {
-                    //updateGroupToFirebase();
                     finish();
                 }
             }

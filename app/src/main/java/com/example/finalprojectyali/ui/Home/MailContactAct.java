@@ -37,7 +37,7 @@ public class MailContactAct extends AppCompatActivity {
         submitMail.setOnClickListener(view -> {
             Intent emailIntent = new Intent(Intent.ACTION_SEND);
             emailIntent.setType("message/rfc822");
-            emailIntent.putExtra(Intent.EXTRA_EMAIL,new String[]{"ofekalm100@gmail.com"});
+            emailIntent.putExtra(Intent.EXTRA_EMAIL,new String[]{"yalishemtov1234@gmail.com"});
             emailIntent.putExtra(Intent.EXTRA_SUBJECT, emailTitleTv.getEditableText().toString()); //title
             emailIntent.putExtra(Intent.EXTRA_TEXT, emailBodyTv.getEditableText().toString()); // description
             emailIntent.setType("text/html");

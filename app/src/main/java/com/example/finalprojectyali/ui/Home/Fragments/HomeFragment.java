@@ -2,6 +2,10 @@ package com.example.finalprojectyali.ui.Home.Fragments;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.util.Log;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.ViewGroup;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -10,253 +14,239 @@ import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
-import android.util.Log;
-import android.view.LayoutInflater;
-import android.view.View;
-import android.view.ViewGroup;
-import android.widget.Toast;
-
-import com.example.finalprojectyali.Models.Group;
-import com.example.finalprojectyali.Adapters.RecyclerViewFunctionalities;
 import com.example.finalprojectyali.Adapters.GroupAdapter;
+import com.example.finalprojectyali.Adapters.RecyclerViewFunctionalities;
+import com.example.finalprojectyali.Extras.GroupRepository;
 import com.example.finalprojectyali.Extras.Utils;
 import com.example.finalprojectyali.Models.Group;
 import com.example.finalprojectyali.R;
 import com.example.finalprojectyali.ui.Home.GroupActivity;
-import com.google.android.gms.tasks.Task;
-import com.google.android.gms.tasks.Tasks;
 import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.database.ChildEventListener;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ServerValue;
 import com.google.firebase.database.ValueEventListener;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
- A fragment for displaying and managing the user's task list. The 'HomePage'
- Implements the RecyclerViewFunctionalities interface to handle RecyclerView actions.
- @author Ofek Almog
+ * Displays user's groups in real-time.
  */
 public class HomeFragment extends Fragment implements RecyclerViewFunctionalities {
 
-    /** List of tasks */
-    public static List<Group> groupsList;
+    // ─────────── Instance fields ───────────
+    private final List<Group> groupsList = new ArrayList<>();
+    private final Map<String, ValueEventListener> groupDetailsListeners = new HashMap<>();
 
-    /** Adapter for the RecyclerView */
-    GroupAdapter adapter;
+    private GroupAdapter adapter;
+    private RecyclerView recyclerView;
 
-    /** RecyclerView for displaying the tasks */
-    RecyclerView recyclerView;
+    private DatabaseReference userGroupsRef;
+    private ChildEventListener groupsKeysListener;
 
-    /** Reference to the Firebase Realtime Database */
-    DatabaseReference myRef;
+    private FirebaseAuth mAuth;
 
-    /** Firebase Authentication instance */
-    FirebaseAuth mAuth;
-
-    /**
-     Called immediately after onCreateView has returned, but before any saved state has been restored in to the view.
-     Initializes the RecyclerView and retrieves the user's tasks from the database.
-     @param view The View returned by onCreateView.
-     @param savedInstanceState If non-null, this fragment is being re-constructed from a previous saved state as given here.
-     */
+    // ─────────── Lifecycle ───────────
     @Override
-    public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
-        super.onViewCreated(view, savedInstanceState);
-
-        recyclerView = view.findViewById(R.id.group_recycler_view);
-        recyclerView.setHasFixedSize(true);
-        recyclerView.setLayoutManager(new GridLayoutManager(getContext(),1));
-
-        mAuth = FirebaseAuth.getInstance();
-
-        // Set the reference to the Firebase Realtime Database
-        myRef = FirebaseDatabase.getInstance().getReferenceFromUrl("https://myproject-6c69b-default-rtdb.firebaseio.com/");
-        myRef = myRef.child("Users/"
-                + FirebaseAuth.getInstance().getCurrentUser().getUid()
-                +"/Groups");
-
-        //\\
-        if(Utils.isConnectedToInternet(getContext()))
-            this.retrieveData(this);
-        else{
-            AlertDialog.Builder alertDialog;
-            alertDialog = new AlertDialog.Builder(getContext());
-
-            alertDialog
-                    .setMessage("You're not connected to internet, we can't proceed.")
-                    .setTitle("Internet Connection")
-                    .setCancelable(false)
-                    .setIcon(R.drawable.baseline_airplanemode_active_24);
-
-            alertDialog.setPositiveButton("I WILL TURN IT OFF", (dialogInterface, i) -> {
-                dialogInterface.cancel();
-                this.retrieveData(this);
-            });
-
-            alertDialog.setNeutralButton("OK", (dialogInterface, i) ->{
-                dialogInterface.cancel();
-            });
-            AlertDialog alert = alertDialog.create();
-            alert.show();
-
-        }
-    }
-
-    /**
-     Retrieves the user's tasks from the Firebase Realtime Database and updates the RecyclerView.
-     @param cb An instance of the RecyclerViewFunctionalities interface.
-     */
-    private void retrieveData(RecyclerViewFunctionalities cb) {
-
-        // 1) path that holds only the booleans
-        DatabaseReference memberFlags = FirebaseDatabase.getInstance()
-                .getReference("Users")
-                .child(FirebaseAuth.getInstance().getUid())
-                .child("Groups");
-
-        memberFlags.addValueEventListener(new ValueEventListener() {
-            @Override
-            public void onDataChange(@NonNull DataSnapshot snapshot) {
-
-                List<Task<DataSnapshot>> lookups = new ArrayList<>();
-
-                // 2) build one read-task per groupId
-                for (DataSnapshot flag : snapshot.getChildren()) {
-                    String gid = flag.getKey();                      // "-OPWWG…"
-                    lookups.add(FirebaseDatabase.getInstance()
-                            .getReference("Groups")
-                            .child(gid)
-                            .get());
-                }
-
-                // 3) if user belongs to no groups, finish early
-                if (lookups.isEmpty()) {
-                    groupsList = new ArrayList<>();
-                    adapter = new GroupAdapter(getContext(), groupsList, cb);
-                    recyclerView.setAdapter(adapter);
-                    return;
-                }
-
-                // 4) wait until *all* /Groups/{gid} snapshots return
-                Tasks.whenAllSuccess(lookups)
-                        .addOnSuccessListener(results -> {
-                            groupsList = new ArrayList<>();
-                            for (Object obj : results) {
-                                DataSnapshot s = (DataSnapshot) obj;
-                                Group g = s.getValue(Group.class);
-                                if (g != null) groupsList.add(g);
-                            }
-
-                            if (adapter == null) {                      // first load
-                                adapter = new GroupAdapter(getContext(), groupsList, cb);
-                                recyclerView.setAdapter(adapter);
-                            } else {                                    // refresh
-                                adapter.notifyDataSetChanged();
-                            }
-                        })
-                        .addOnFailureListener(e ->
-                                Log.e("HomeFragment", "Loading groups failed", e));
-            }
-
-            @Override public void onCancelled(@NonNull DatabaseError error) {
-                Log.e("HomeFragment", "Flag listener cancelled", error.toException());
-            }
-        });
-    }
-
-    /**
-     Called to have the fragment instantiate its user interface view.
-     Inflates the layout for this fragment and returns the inflated View object.
-     @param inflater The LayoutInflater object that can be used to inflate any views in the fragment.
-     @param container If non-null, this is the parent view that the fragment's UI should be attached to.
-     @param savedInstanceState If non-null, this fragment is being re-constructed from a previous saved state as given here.
-     @return The View for the fragment's UI, or null.
-     */
-    @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container,
+    public View onCreateView(@NonNull LayoutInflater inflater,
+                             ViewGroup container,
                              Bundle savedInstanceState) {
-        // Inflate the layout for this fragment
         return inflater.inflate(R.layout.fragment_home, container, false);
     }
 
-//    /**
-//     Method to move to the detailed screen of a selected task.
-//     @param task The task to be shown in the detailed screen.
-//     */
-//    private void moveToDetailedScreen(Group grp){
-//        Log.d("MoveScreen","Moving to detailed screen");
-//        Intent i = new Intent(getActivity(), DetailedTaskAct.class);
-//        Log.d("ObjectValues",grp.toString());
-//        i.putExtra("selected_task_name",grp.getName());
-//        i.putExtra("selected_task_time",grp.getTime());
-//        i.putExtra("selected_task_desc",grp.getDescription());
-//        i.putExtra("selected_task_diff",grp.getDifficulty());
-//        i.putExtra("selected_task_key",grp.getKey());
-//        i.putExtra("from_intent","Edit");
-//        startActivity(i);
-//    }
+    @Override
+    public void onViewCreated(@NonNull View view,
+                              @Nullable Bundle savedInstanceState) {
+        super.onViewCreated(view, savedInstanceState);
 
-    /**
-     Handles the action when an item in the RecyclerView is clicked.
-     Starts the DetailedTaskAct activity with the information of the selected task.
-     @param position The position of the selected item in the RecyclerView.
-     */
+        recyclerView = view.findViewById(R.id.group_recycler_view);
+        recyclerView.setLayoutManager(new GridLayoutManager(requireContext(), 1));
+        recyclerView.setHasFixedSize(true);
+
+        adapter = new GroupAdapter(requireContext(), groupsList, this);
+        recyclerView.setAdapter(adapter);
+
+        mAuth = FirebaseAuth.getInstance();
+        String uid = mAuth.getCurrentUser().getUid();
+        userGroupsRef = FirebaseDatabase.getInstance()
+                .getReference("Users")
+                .child(uid)
+                .child("Groups");
+
+        if (Utils.isConnectedToInternet(requireContext())) {
+            attachGroupKeysListener();
+        } else {
+            new AlertDialog.Builder(requireContext())
+                    .setIcon(R.drawable.baseline_airplanemode_active_24)
+                    .setTitle("Internet Connection")
+                    .setMessage("You're not connected to the internet. We can't proceed.")
+                    .setCancelable(false)
+                    .setPositiveButton("I WILL TURN IT OFF", (d, w) -> {
+                        d.dismiss();
+                        attachGroupKeysListener();
+                    })
+                    .setNeutralButton("OK", (d, w) -> d.dismiss())
+                    .show();
+        }
+    }
+
+    // ─────────── Real-time listeners ───────────
+    private void attachGroupKeysListener() {
+        groupsKeysListener = new ChildEventListener() {
+
+            @Override
+            public void onChildAdded(@NonNull DataSnapshot snapshot,
+                                     @Nullable String previousChildName) {
+                String groupId = snapshot.getKey();
+                if (groupId != null) attachGroupDetailsListener(groupId);
+            }
+
+            @Override
+            public void onChildRemoved(@NonNull DataSnapshot snapshot) {
+                String groupId = snapshot.getKey();
+                if (groupId == null) return;
+
+                // stop listening to that group’s changes
+                detachGroupDetailsListener(groupId);
+
+                int idx = indexOfGroup(groupId);
+                if (idx != -1) {
+                    groupsList.remove(idx);
+                    adapter.notifyItemRemoved(idx);
+                }
+            }
+
+            @Override public void onChildChanged(@NonNull DataSnapshot s, @Nullable String p) {/*unused*/}
+            @Override public void onChildMoved(@NonNull DataSnapshot s, @Nullable String p)     {/*unused*/}
+            @Override public void onCancelled(@NonNull DatabaseError error) {
+                Log.e("HomeFragment", "userGroups listener cancelled", error.toException());
+            }
+        };
+
+        userGroupsRef.addChildEventListener(groupsKeysListener);
+    }
+
+    private void attachGroupDetailsListener(@NonNull String groupId) {
+        DatabaseReference ref = FirebaseDatabase.getInstance()
+                .getReference("Groups")
+                .child(groupId);
+
+        ValueEventListener detailsListener = new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot snapshot) {
+                Group g = snapshot.getValue(Group.class);
+                if (g == null) return;
+
+                int idx = indexOfGroup(groupId);
+                if (idx == -1) {                       // new
+                    groupsList.add(g);
+                    adapter.notifyItemInserted(groupsList.size() - 1);
+                } else {                               // update
+                    groupsList.set(idx, g);
+                    adapter.notifyItemChanged(idx);
+                }
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError error) {
+                Log.e("HomeFragment", "group details listener cancelled", error.toException());
+            }
+        };
+
+        ref.addValueEventListener(detailsListener);
+        groupDetailsListeners.put(groupId, detailsListener);
+    }
+
+    private void detachGroupDetailsListener(@NonNull String groupId) {
+        ValueEventListener l = groupDetailsListeners.remove(groupId);
+        if (l != null) {
+            FirebaseDatabase.getInstance()
+                    .getReference("Groups")
+                    .child(groupId)
+                    .removeEventListener(l);
+        }
+    }
+
+    private int indexOfGroup(String groupId) {
+        for (int i = 0; i < groupsList.size(); i++) {
+            if (groupsList.get(i).getKey().equals(groupId)) return i;
+        }
+        return -1;
+    }
+
+    // ─────────── RecyclerViewFunctionalities ───────────
     @Override
     public void onItemClick(int position) {
-        Log.d("TODO", "onItemClick: well well doesn't work yet");
-        Intent intent = new Intent(getContext(), GroupActivity.class);
-        startActivity(intent);
-//        Group t = new Group(
-//                tasksList.get(position).getName(),
-//                tasksList.get(position).getTime(),
-//                tasksList.get(position).getDescription(),
-//                tasksList.get(position).getDifficulty(),
-//                tasksList.get(position).getKey()
-//        );
-//        moveToDetailedScreen(t);
+        Group g = groupsList.get(position);
+        Intent i = new Intent(requireContext(), GroupActivity.class);
+        i.putExtra("group_key",           g.getKey());
+        i.putExtra("group_name",          g.getName());
+        i.putExtra("group_description",   g.getDescription());
+        i.putExtra("group_ownerUid",      g.getOwnerUid());
+        i.putExtra("group_membersCount",  g.getMembersCount());
+        i.putExtra("group_joinCode",      g.getJoinCode());
+        startActivity(i);
     }
 
-    /**
-     Handles the long-click event of an item in the RecyclerView list.
-     Shows an AlertDialog with a confirmation message for task deletion, and deletes the task from the database
-     and updates the adapter on "Yes" button click.
-     @param position the position of the item in the RecyclerView list.
-     @return true if the event was consumed, false otherwise.
-     */
     @Override
     public boolean onItemLongClick(int position) {
-        AlertDialog.Builder alertDialog;
-        alertDialog = new AlertDialog.Builder(getContext());
+        Group g = groupsList.get(position);
 
-        alertDialog
-                .setMessage("Are you sure you want to exit this group?")
-                .setTitle("Delete Task");
-
-        alertDialog.setPositiveButton("Yes", (dialogInterface, i) -> {
-            dialogInterface.cancel();
-
-            DatabaseReference myRef = FirebaseDatabase.getInstance().getReference(
-                    "Users/"
-                            + FirebaseAuth.getInstance().getCurrentUser().getUid()
-                            +"/Groups"
-            );
-            myRef = myRef.child(groupsList.get(position).getKey());
-            myRef.removeValue();
-            adapter.notifyItemRemoved(position);
-
+        GroupRepository.isCurrentUserOwner(g.getKey(), isOwner -> {
+            new AlertDialog.Builder(requireContext())
+                    .setTitle(isOwner ? "Delete Group" : "Exit Group")
+                    .setMessage(isOwner
+                            ? "Are you sure you want to delete this group for everyone?"
+                            : "Are you sure you want to leave this group?")
+                    .setNegativeButton("Cancel", (d, w) -> d.dismiss())
+                    .setPositiveButton("Yes", (d, w) -> {
+                        d.dismiss();
+                        if (isOwner) GroupRepository.deleteGroupIfOwner(g.getKey());
+                        else leaveGroup(g);
+                    })
+                    .show();
         });
-        alertDialog.setNegativeButton("Cancel", (dialogInterface, i) -> {
-            dialogInterface.cancel();
-            Toast.makeText(getContext(),"Event was cancelled successfully",Toast.LENGTH_LONG).show();
-        });
-        AlertDialog alert = alertDialog.create();
-        alert.show();
         return true;
-        //REMOVE FROM DB.
     }
 
+    private void leaveGroup(Group g) {
+        String uid = FirebaseAuth.getInstance().getCurrentUser().getUid();
+
+        FirebaseDatabase db = FirebaseDatabase.getInstance();
+        db.getReference("Users")
+                .child(uid).child("Groups")
+                .child(g.getKey()).removeValue();
+
+        db.getReference("Groups")
+                .child(g.getKey()).child("members").child(uid).removeValue();
+
+        db.getReference("Groups")
+                .child(g.getKey()).child("membersCount")
+                .setValue(ServerValue.increment(-1));
+    }
+
+    // ─────────── Cleanup ───────────
+    @Override
+    public void onDestroyView() {
+        super.onDestroyView();
+
+        if (groupsKeysListener != null) {
+            userGroupsRef.removeEventListener(groupsKeysListener);
+        }
+
+        // remove each per-group listener
+        for (Map.Entry<String, ValueEventListener> e : groupDetailsListeners.entrySet()) {
+            FirebaseDatabase.getInstance()
+                    .getReference("Groups")
+                    .child(e.getKey())
+                    .removeEventListener(e.getValue());
+        }
+        groupDetailsListeners.clear();
+    }
 }

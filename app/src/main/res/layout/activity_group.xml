@@ -10,23 +10,50 @@
     <com.google.android.material.appbar.AppBarLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:background="@color/dark_purple"
         android:theme="@style/ThemeOverlay.Material3.Dark.ActionBar">
 
-        <com.google.android.material.appbar.MaterialToolbar
-            android:id="@+id/groupToolbar"
+        <androidx.constraintlayout.widget.ConstraintLayout
             android:layout_width="match_parent"
-            android:layout_height="?attr/actionBarSize"
-            app:title="Group Name"
-            app:navigationIcon="@drawable/ic_arrow_back_24"
-            app:logo="@drawable/baseline_add_shopping_cart_24"
-            app:menu="@menu/menu_group_toolbar">
+            android:layout_height="?attr/actionBarSize">
 
-            <!-- member count at the end of the bar -->
+            <com.google.android.material.appbar.MaterialToolbar
+                android:id="@+id/groupToolbar"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:background="@color/dark_purple"
+                android:minHeight="?attr/actionBarSize"
+                android:theme="?attr/actionBarTheme"
+                app:navigationIcon="@drawable/ic_arrow_back_24"
+                app:title="Group Name"
+                app:titleTextColor="@android:color/white"
+                app:menu="@menu/menu_group_toolbar"
+                app:popupTheme="@style/ThemeOverlay.Material3.Dark.ActionBar"
+                app:contentInsetEnd="0dp"
+                app:contentInsetStart="0dp"/>
+
+            <!-- Group members count at the end of the bar -->
             <LinearLayout
+                android:id="@+id/groupMembersLayout"
                 android:layout_width="wrap_content"
                 android:layout_height="match_parent"
                 android:orientation="horizontal"
-                android:gravity="center_vertical|end">
+                android:gravity="center_vertical"
+                android:paddingEnd="16dp"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintBottom_toBottomOf="parent">
+
+                <!-- New shekel indicator TextView -->
+                <TextView
+                    android:id="@+id/groupShekelSumTextView"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="0₪"
+                    android:textColor="@android:color/white"
+                    android:textStyle="bold"
+                    android:textSize="16sp"
+                    android:paddingEnd="4dp"/>
 
                 <TextView
                     android:id="@+id/groupMembersCountTextView"
@@ -35,9 +62,10 @@
                     android:text="5"
                     android:drawableStart="@drawable/baseline_boy_24"
                     android:textColor="@android:color/white"
-                    android:paddingEnd="16dp"/>
+                    android:textStyle="bold"
+                    android:textSize="16sp"/>
             </LinearLayout>
-        </com.google.android.material.appbar.MaterialToolbar>
+        </androidx.constraintlayout.widget.ConstraintLayout>
     </com.google.android.material.appbar.AppBarLayout>
 
     <!-- ──────────── Ingredients list ──────────── -->

@@ -16,7 +16,7 @@ public class JoinLink extends AppCompatActivity {
     @Override protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        Uri data = getIntent().getData();              // myapp://join?code=AB12
+        Uri data = getIntent().getData();              // com.example.finalprojectyali://join?code=AB12
         if (data == null || !"join".equals(data.getHost())) {
             finish(); return;
         }

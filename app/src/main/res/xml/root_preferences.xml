@@ -26,26 +26,6 @@
             app:defaultValue="true"/>
 
     </PreferenceCategory>
-    <PreferenceCategory app:title="Onboadring">
-        <!--    <MultiSelectListPreference-->
-        <!--        app:key="activities_multiselect_list_preference"-->
-        <!--        app:title="Select your guides you want to get"-->
-        <!--        app:summary="Select your explanation to activities"-->
-        <!--        android:entries="@array/activities"-->
-        <!--        android:entryValues="@array/activities_values"-->
-        <!--        app:dialogTitle="Choose activities"-->
-        <!--        app:dialogMessage="Select one or more activities"-->
-        <!--        app:positiveButtonText="OK"-->
-        <!--        app:negativeButtonText="Cancel"/>-->
-        <MultiSelectListPreference
-            android:key="activities_multiselect_list_preference"
-            android:title="Example MultiSelectListPreference"
-            android:summary="Select your favorite colors"
 
-            android:dialogTitle="Choose colors"
-            android:dialogMessage="Select one or more colors"
-            android:positiveButtonText="Ok"
-            android:negativeButtonText="Cancel"/>
-    </PreferenceCategory>
 
 </PreferenceScreen>

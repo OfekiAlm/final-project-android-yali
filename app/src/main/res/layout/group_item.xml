@@ -14,15 +14,25 @@
         android:layout_height="wrap_content"
         android:padding="16dp">
 
+        <!-- Add-link icon -->
+        <ImageView
+            android:id="@+id/addLinkImageView"
+            android:layout_width="24dp"
+            android:layout_height="24dp"
+            app:srcCompat="@drawable/outline_add_link_24"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
         <TextView
             android:id="@+id/groupNameTextView"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:textAppearance="@style/TextAppearance.AppCompat.Large"
             android:textStyle="bold"
-            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintEnd_toStartOf="@id/addLinkImageView"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintHorizontal_bias="0"
             tools:text="Group Name" />
 
         <TextView

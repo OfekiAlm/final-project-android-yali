@@ -5,11 +5,13 @@ import android.content.Context;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageView;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.recyclerview.widget.RecyclerView;
+
 import com.example.finalprojectyali.Extras.Utils; // Assuming Utils.checkInterfaceValid is still relevant
 import com.example.finalprojectyali.Models.Group;
 import com.example.finalprojectyali.R;
@@ -87,26 +89,15 @@ public class GroupAdapter extends RecyclerView.Adapter<GroupAdapter.GroupViewHol
     @Override
     public void onBindViewHolder(@NonNull GroupViewHolder holder, int position) {
         Group group = groupList.get(position);
-
         holder.groupNameTextView.setText(group.getName());
-        holder.groupNameTextView.setContentDescription("Group name is " + group.getName()); // Content description for accessibility
-
         holder.groupDescriptionTextView.setText(group.getDescription());
-        holder.groupDescriptionTextView.setContentDescription("Group description: " + group.getDescription());
-
-        // Format member count string
-        @SuppressLint({"StringFormatInvalid", "LocalSuppress"}) String membersText = context.getString(R.string.group_members_count, group.getMembersCount()); // Use string resource
-        holder.groupMembersCountTextView.setText(membersText);
-        holder.groupMembersCountTextView.setContentDescription(membersText);
-
-        // Format and set creation date
+        holder.groupMembersCountTextView.setText("Members: " + group.getMembersCount());
         holder.groupCreationDateTextView.setText(formatDate(group.getCreationDate()));
-        // Optional: Content description for date if needed
-        holder.groupCreationDateTextView.setContentDescription("Group created on " + formatDate(group.getCreationDate()));
     }
 
     /**
      * Formats the date object into a readable string.
+     *
      * @param date The date to format.
      * @return Formatted date string or "N/A" if date is null.
      */
@@ -152,11 +143,11 @@ public class GroupAdapter extends RecyclerView.Adapter<GroupAdapter.GroupViewHol
          * The TextViews that display the properties of the group.
          */
         TextView groupNameTextView, groupDescriptionTextView, groupMembersCountTextView, groupCreationDateTextView;
-
+        ImageView groupCode;
         /**
          * The ConstraintLayout field represents the layout of the group item.
          */
-        ConstraintLayout constraintLayout; // Keep if needed, or use itemView directly
+        ConstraintLayout constraintLayout;
 
         /**
          * Constructs a new GroupViewHolder object.
@@ -171,12 +162,15 @@ public class GroupAdapter extends RecyclerView.Adapter<GroupAdapter.GroupViewHol
             groupDescriptionTextView = itemView.findViewById(R.id.groupDescriptionTextView);
             groupMembersCountTextView = itemView.findViewById(R.id.groupMembersCountTextView);
             groupCreationDateTextView = itemView.findViewById(R.id.groupCreationDateTextView);
+            groupCode = itemView.findViewById(R.id.addLinkImageView); // Assuming you have a TextView for group code
             constraintLayout = itemView.findViewById(R.id.groupItemLayout); // ID from the ConstraintLayout in group_item.xml
 
-
-            // Remove task-specific views and listeners
-            // FloatingActionButton startTaskFAB = itemView.findViewById(R.id.fab_start_task);
-            // startTaskFAB.setOnClickListener(...)
+            groupCode.setOnClickListener(v -> {
+                int pos = getBindingAdapterPosition();
+                if (recyclerViewFunctionalities != null && pos != RecyclerView.NO_POSITION) {
+                    setClipboard(itemView.getContext(), groupList.get(pos).getJoinCode()); // 4 Letter code
+                }
+            });
 
             // Set listener for item click (using the interface)
             itemView.setOnClickListener(view -> {
@@ -200,7 +194,15 @@ public class GroupAdapter extends RecyclerView.Adapter<GroupAdapter.GroupViewHol
             });
         }
 
-        // Removed moveToTimerScreen method as it was task-specific
-        // private void moveToTimerScreen(Task t) { ... }
+        private void setClipboard(Context context, String text) {
+            if (android.os.Build.VERSION.SDK_INT < android.os.Build.VERSION_CODES.HONEYCOMB) {
+                android.text.ClipboardManager clipboard = (android.text.ClipboardManager) context.getSystemService(Context.CLIPBOARD_SERVICE);
+                clipboard.setText(text);
+            } else {
+                android.content.ClipboardManager clipboard = (android.content.ClipboardManager) context.getSystemService(Context.CLIPBOARD_SERVICE);
+                android.content.ClipData clip = android.content.ClipData.newPlainText("Copied Text", text);
+                clipboard.setPrimaryClip(clip);
+            }
+        }
     }
 }

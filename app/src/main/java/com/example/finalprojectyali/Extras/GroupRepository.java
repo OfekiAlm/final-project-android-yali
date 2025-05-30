@@ -1,19 +1,20 @@
 package com.example.finalprojectyali.Extras;
 
-import static com.google.firebase.database.Transaction.*;
+import static com.google.firebase.database.Transaction.Handler;
 
 import androidx.annotation.NonNull;
 
 import com.example.finalprojectyali.Models.Group;
 import com.example.finalprojectyali.Models.Ingredient;
 import com.google.android.gms.tasks.Task;
+import com.google.android.gms.tasks.TaskCompletionSource;
+import com.google.android.gms.tasks.Tasks;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.MutableData;
-import com.google.android.gms.tasks.*;
 import com.google.firebase.database.Transaction;
 
 import java.security.SecureRandom;
@@ -24,16 +25,16 @@ import java.util.function.Consumer;
 
 public final class GroupRepository {
 
-    private static final DatabaseReference ROOT = FirebaseDatabase.getInstance().getReference();
-    private static final DatabaseReference GROUPS = ROOT.child("groups");
+    private static final DatabaseReference ROOT   = FirebaseDatabase.getInstance().getReference();
+    private static final DatabaseReference GROUPS = ROOT.child("Groups");      // **exact casing**
     private static final DatabaseReference JOIN_CODES = ROOT.child("joinCodes");
+
     private static final SecureRandom RNG = new SecureRandom();
     private static final String ALPHA_NUM = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
 
-
-    /* ------------------------------------------------------------------ */
-    /* 1. Create a new group  (collision-safe join-code)                  */
-    /* ------------------------------------------------------------------ */
+    /* ─────────────────────────────────────────────────────────────────── */
+    /* 1. Create group                                                    */
+    /* ─────────────────────────────────────────────────────────────────── */
     public static Task<Group> createGroup(String name,
                                           String description,
                                           List<Ingredient> ingredients,
@@ -54,90 +55,137 @@ public final class GroupRepository {
                     Group g = new Group(name, description, uid, joinCode, ingredients);
                     g.setKey(pushKey);
 
-                    Map<String,Object> fanOut = new HashMap<>();
+                    Map<String, Object> fanOut = new HashMap<>();
                     fanOut.put("/Groups/" + pushKey, g);
                     fanOut.put("/joinCodes/" + joinCode, pushKey);
                     fanOut.put("/Users/" + uid + "/Groups/" + pushKey, true);
 
-                    // propagate the Group object forward so callers get it
                     return ROOT.updateChildren(fanOut).continueWith(t -> g);
                 })
                 .addOnSuccessListener(onSuccess::accept)
                 .addOnFailureListener(onError::accept);
     }
 
+    /* ─────────────────────────────────────────────────────────────────── */
+    /* 2. Update name / description                                       */
+    /* ─────────────────────────────────────────────────────────────────── */
+    public static Task<Void> updateGroup(String groupId,
+                                         String name,
+                                         String description,
+                                         @NonNull Consumer<Void> onSuccess,
+                                         @NonNull Consumer<Exception> onError) {
 
+        Map<String, Object> updates = new HashMap<>();
+        updates.put("name", name);
+        updates.put("description", description);
 
-    /* ------------------------------------------------------------------ */
-    /* 2. Join existing group via code                                    */
-    /* ------------------------------------------------------------------ */
+        return GROUPS.child(groupId).updateChildren(updates)
+                .addOnSuccessListener(aVoid -> onSuccess.accept(null))
+                .addOnFailureListener(onError::accept);
+    }
+
+    /* ─────────────────────────────────────────────────────────────────── */
+    /* 3. Join by code                                                    */
+    /* ─────────────────────────────────────────────────────────────────── */
     public static void joinByCode(String code,
                                   @NonNull Consumer<Group> onSuccess,
-                                  @NonNull Consumer<String> onFail)
-    {
+                                  @NonNull Consumer<String> onFail) {
+
         JOIN_CODES.child(code).get().addOnSuccessListener(snap -> {
+
             if (!snap.exists()) { onFail.accept("Code not found"); return; }
 
             String groupId = snap.getValue(String.class);
             String uid     = FirebaseAuth.getInstance().getUid();
 
-            // Atomically add user to members[] and increment count
+            if (groupId == null || uid == null) { onFail.accept("Invalid state"); return; }
+
             GROUPS.child(groupId).runTransaction(new Handler() {
+
                 @NonNull @Override
-                public Result doTransaction(@NonNull MutableData current) {
+                public Transaction.Result doTransaction(@NonNull MutableData current) {
                     Group g = current.getValue(Group.class);
-                    if (g == null) return success(current);
+                    if (g == null) return Transaction.abort();
 
-                    if (g.getMembers() != null && g.getMembers().containsKey(uid))
-                        return success(current); // already inside
+                    Map<String, Boolean> members = g.getMembers();
+                    if (members == null) members = new HashMap<>();
 
-                    g.getMembers().put(uid, true);
+                    if (members.containsKey(uid))
+                        return Transaction.success(current);   // already inside
+
+                    members.put(uid, true);
+                    g.setMembers(members);
                     g.setMembersCount(g.getMembersCount() + 1);
                     current.setValue(g);
-                    return success(current);
+                    return Transaction.success(current);
                 }
 
-                @Override public void onComplete(DatabaseError error, boolean committed, DataSnapshot currentData) {
-                    if (committed && error == null) {
-                        // Add shortcut in user branch
-                        ROOT.child("Users").child(uid)
-                                .child("Groups").child(groupId).setValue(true);
-                        onSuccess.accept(currentData.getValue(Group.class));
-                    } else {
-                        onFail.accept("Join failed: " + (error != null ? error.getMessage() : ""));
-                    }
+                @Override
+                public void onComplete(DatabaseError error, boolean committed, DataSnapshot data) {
+                    if (error != null) { onFail.accept("Join failed: " + error.getMessage()); return; }
+                    if (!committed)   { onFail.accept("Join aborted"); return; }
+
+                    ROOT.child("Users").child(uid).child("Groups").child(groupId)
+                            .setValue(true)
+                            .addOnSuccessListener(v -> onSuccess.accept(data.getValue(Group.class)))
+                            .addOnFailureListener(e -> onFail.accept(e.getMessage()));
                 }
             });
         }).addOnFailureListener(e -> onFail.accept(e.getMessage()));
     }
 
-    /* ------------------------------------------------------------------ */
-    /* 3. Check owner privileges                                          */
-    /* ------------------------------------------------------------------ */
+    /* ─────────────────────────────────────────────────────────────────── */
+    /* 4. Privilege check                                                 */
+    /* ─────────────────────────────────────────────────────────────────── */
     public static void isCurrentUserOwner(String groupId, Consumer<Boolean> cb) {
         GROUPS.child(groupId).child("ownerUid").get()
-                .addOnSuccessListener(snap -> cb.accept(
-                        FirebaseAuth.getInstance().getUid().equals(snap.getValue(String.class))));
+                .addOnSuccessListener(snap ->
+                        cb.accept(FirebaseAuth.getInstance().getUid()
+                                .equals(snap.getValue(String.class))));
     }
 
-    /* ------------------------------------------------------------------ */
-    /* 4. Delete a group (owner only)                                     */
-    /* ------------------------------------------------------------------ */
+    /* ─────────────────────────────────────────────────────────────────── */
+    /* 5. Delete group (owner only)                                       */
+    /* ─────────────────────────────────────────────────────────────────── */
     public static Task<Void> deleteGroupIfOwner(String groupId) {
-        return GROUPS.child(groupId).get().continueWithTask(t -> {
-            Group g = t.getResult().getValue(Group.class);
-            if (g == null) throw new IllegalStateException("Group missing");
-            if (!FirebaseAuth.getInstance().getUid().equals(g.getOwnerUid()))
-                throw new SecurityException("Only owner can delete");
 
-            // Easy version: just remove /groups and /joinCodes/{code}
-            Task<?> t1 = GROUPS.child(groupId).removeValue();
-            Task<?> t2 = JOIN_CODES.child(g.getJoinCode()).removeValue();
-            return Tasks.whenAll(t1, t2);
+        return GROUPS.child(groupId).get().continueWithTask(t -> {
+
+            /* 5-a. Basic validation */
+            DataSnapshot snap = t.getResult();
+            Group g = snap.getValue(Group.class);
+
+            if (g == null)
+                throw new IllegalStateException("Group does not exist");
+
+            String currentUid = FirebaseAuth.getInstance().getUid();
+            if (currentUid == null || !currentUid.equals(g.getOwnerUid()))
+                throw new SecurityException("Only the owner can delete");
+
+            /* 5-b. Build one big fan-out map of deletions */
+            Map<String, Object> fanOut = new HashMap<>();
+
+            /* remove the group itself */
+            fanOut.put("/Groups/" + groupId, null);
+
+            /* remove the join-code */
+            fanOut.put("/joinCodes/" + g.getJoinCode(), null);
+
+            /* remove the group pointer under each user */
+            if (g.getMembers() != null) {
+                for (String memberUid : g.getMembers().keySet()) {
+                    fanOut.put("/Users/" + memberUid + "/Groups/" + groupId, null);
+                }
+            }
+
+            /* 5-c. Atomically apply */
+            return ROOT.updateChildren(fanOut);
         });
     }
 
-    /* utility */
+    /* ─────────────────────────────────────────────────────────────────── */
+    /* 6. Helper: generate unique code                                    */
+    /* ─────────────────────────────────────────────────────────────────── */
     private static String randomCode() {
         char[] buf = new char[4];
         for (int i = 0; i < 4; i++)
@@ -145,49 +193,40 @@ public final class GroupRepository {
         return new String(buf);
     }
 
-    /** Generates a 4-char code that is guaranteed unique under /joinCodes */
     private static Task<String> generateUniqueCodeAsync() {
 
         TaskCompletionSource<String> tcs = new TaskCompletionSource<>();
-
-        attemptReserveCode(tcs);   // recursion happens inside this helper
-
-        return tcs.getTask();      // the Task<String> the rest of the code awaits
+        attemptReserveCode(tcs);
+        return tcs.getTask();
     }
 
     private static void attemptReserveCode(TaskCompletionSource<String> tcs) {
 
         String code = randomCode();
-        DatabaseReference codeRef = JOIN_CODES.child(code);
+        DatabaseReference ref = JOIN_CODES.child(code);
 
-        codeRef.runTransaction(new Transaction.Handler() {
+        ref.runTransaction(new Handler() {
 
             @NonNull @Override
-            public Transaction.Result doTransaction(@NonNull MutableData current) {
-                if (current.getValue() != null) {             // collision – abort
-                    return Transaction.abort();
-                }
-                current.setValue(true);                       // reserve
-                return Transaction.success(current);
+            public Transaction.Result doTransaction(@NonNull MutableData cur) {
+                if (cur.getValue() != null) return Transaction.abort();
+                cur.setValue(true);
+                return Transaction.success(cur);
             }
 
             @Override
-            public void onComplete(DatabaseError error,
-                                   boolean committed,
-                                   DataSnapshot snapshot) {
+            public void onComplete(DatabaseError e, boolean committed, DataSnapshot ds) {
 
-                if (error != null) {                          // network / perms
-                    tcs.setException(error.toException());
-                    return;
-                }
+                if (e != null) { tcs.setException(e.toException()); return; }
 
-                if (committed) {                              // success – done
+                if (committed) {
                     tcs.setResult(code);
-                } else {                                      // collision – retry
-                    attemptReserveCode(tcs);
+                } else {
+                    attemptReserveCode(tcs);  // collision – try another code
                 }
             }
         });
     }
-    private GroupRepository() {}
+
+    private GroupRepository() {}     // no instances
 }

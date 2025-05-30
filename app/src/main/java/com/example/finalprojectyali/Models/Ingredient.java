@@ -1,45 +1,46 @@
 package com.example.finalprojectyali.Models;
 
 /**
- * Represents an ingredient.
+ * Represents a single ingredient in a group’s shopping list.
+ *
+ * <p>The {@code key} property holds the Firebase child-ID (push-ID) used
+ * to store this ingredient under <code>/groups/&lt;groupKey&gt;/ingredients/&lt;key&gt;</code>.
+ * Keep it <strong>public-getter / public-setter</strong> so Firebase can
+ * (de)serialize it automatically.</p>
  */
 public class Ingredient {
 
-    /**
-     * The name of the ingredient
-     */
+    /* Firebase child id (set by push().getKey()) */
+    private String key;
+
+    /* Basic fields ------------------------------------------------------- */
     private String name;
-    /**
-     * The price of the ingredient
-     */
     private double price;
-    /**
-     * The quantity of the ingredient
-     */
     private int quantity;
 
-    private boolean acquired; // true if the ingredient is acquired, false otherwise
-    private String acquiredBy; // the name of the person who acquired the ingredient
-    private long acquiredAt; // the timestamp when the ingredient was acquired
+    /* Acquisition info --------------------------------------------------- */
+    private boolean acquired;     // true if already bought
+    private String acquiredBy;   // display name of the buyer
+    private long acquiredAt;   // epoch-ms when bought
+
+    /* ------------------------------------------------------------------- */
+    /*  Constructors                                                       */
+    /* ------------------------------------------------------------------- */
 
     /**
-     * Default constructor for Firebase.
+     * Empty constructor required by Firebase.
      */
+    @SuppressWarnings("unused")
     public Ingredient() {
     }
 
-    /**
-     * Constructor for creating an ingredient with given values.
-     *
-     * @param name the name of the ingredient
-     * @param price the price of the ingredient
-     * @param quantity the quantity of the ingredient
-     * @param acquired true if the ingredient is acquired, false otherwise
-     * @param acquiredBy the name of the person who acquired the ingredient
-     * @param acquiredAt the timestamp when the ingredient was acquired
-     */
-    public Ingredient(String name, double price, int quantity,
-            boolean acquired, String acquiredBy, long acquiredAt) {
+    public Ingredient(String name,
+                      double price,
+                      int quantity,
+                      boolean acquired,
+                      String acquiredBy,
+                      long acquiredAt) {
+
         this.name = name;
         this.price = price;
         this.quantity = quantity;
@@ -48,58 +49,42 @@ public class Ingredient {
         this.acquiredAt = acquiredAt;
     }
 
-    /**
-     * Sets the name of the ingredient.
-     *
-     * @param name the name to set
-     */
-    public void setName(String name) {
-        this.name = name;
+    /* ------------------------------------------------------------------- */
+    /*  Key (Firebase push-ID)                                             */
+    /* ------------------------------------------------------------------- */
+    public String getKey() {
+        return key;
     }
 
-    /**
-     * Returns the name of the ingredient.
-     *
-     * @return the name
-     */
+    public void setKey(String key) {
+        this.key = key;
+    }
+
+    /* ------------------------------------------------------------------- */
+    /*  Basic getters / setters                                            */
+    /* ------------------------------------------------------------------- */
     public String getName() {
         return name;
     }
 
-    /**
-     * Sets the price of the ingredient.
-     *
-     * @param price the price to set
-     */
-    public void setPrice(double price) {
-        this.price = price;
+    public void setName(String name) {
+        this.name = name;
     }
 
-    /**
-     * Returns the price of the ingredient.
-     *
-     * @return the price
-     */
     public double getPrice() {
         return price;
     }
 
-    /**
-     * Sets the quantity of the ingredient.
-     *
-     * @param quantity the quantity to set
-     */
-    public void setQuantity(int quantity) {
-        this.quantity = quantity;
+    public void setPrice(double price) {
+        this.price = price;
     }
 
-    /**
-     * Returns the quantity of the ingredient.
-     *
-     * @return the quantity
-     */
     public int getQuantity() {
         return quantity;
+    }
+
+    public void setQuantity(int quantity) {
+        this.quantity = quantity;
     }
 
     public boolean isAcquired() {
@@ -107,7 +92,7 @@ public class Ingredient {
     }
 
     public void setAcquired(boolean a) {
-        acquired = a;
+        this.acquired = a;
     }
 
     public String getAcquiredBy() {
@@ -115,7 +100,7 @@ public class Ingredient {
     }
 
     public void setAcquiredBy(String u) {
-        acquiredBy = u;
+        this.acquiredBy = u;
     }
 
     public long getAcquiredAt() {
@@ -123,23 +108,22 @@ public class Ingredient {
     }
 
     public void setAcquiredAt(long t) {
-        acquiredAt = t;
+        this.acquiredAt = t;
     }
 
-    /**
-     * Returns a string representation of the Ingredient object.
-     *
-     * @return a string representation of the Ingredient object.
-     */
+    /* ------------------------------------------------------------------- */
+    /*  Debug print                                                        */
+    /* ------------------------------------------------------------------- */
     @Override
     public String toString() {
-        return "Ingredient{"
-                + "name='" + name + '\''
-                + ", price=" + price
-                + ", quantity=" + quantity
-                + ", acquired=" + acquired
-                + ", acquiredBy='" + acquiredBy + '\''
-                + ", acquiredAt=" + acquiredAt
-                + '}';
+        return "Ingredient{" +
+                "key='" + key + '\'' +
+                ", name='" + name + '\'' +
+                ", price=" + price +
+                ", quantity=" + quantity +
+                ", acquired=" + acquired +
+                ", acquiredBy='" + acquiredBy + '\'' +
+                ", acquiredAt=" + acquiredAt +
+                '}';
     }
 }

@@ -6,7 +6,7 @@
     android:layout_height="match_parent"
     android:background="@color/purple_200"
     android:orientation="vertical"
-    tools:context=".ui.DetailedTaskAct">
+    tools:context=".ui.DetailedGroupAct">
 
     <androidx.cardview.widget.CardView
         android:id="@+id/card_view"
@@ -64,7 +64,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginTop="16dp"
                 android:clickable="false"
-                android:hint="Enter task name">
+                android:hint="Enter group name">
 
                 <com.google.android.material.textfield.TextInputEditText
                     android:id="@+id/task_name_et"
@@ -96,7 +96,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginTop="16dp"
                 android:clickable="false"
-                android:hint="Enter task description">
+                android:hint="Enter group description">
 
                 <com.google.android.material.textfield.TextInputEditText
                     android:id="@+id/task_desc_et"

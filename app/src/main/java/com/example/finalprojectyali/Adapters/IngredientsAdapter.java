@@ -1,8 +1,6 @@
 package com.example.finalprojectyali.Adapters;
 
-import android.annotation.SuppressLint;
 import android.content.Context;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -22,12 +20,13 @@ import java.util.List;
 import java.util.Locale;
 
 /**
- * Adapter for displaying a list of Ingredient objects in a RecyclerView.
+ * RecyclerView adapter for a list of {@link Ingredient}.
  */
-public class IngredientsAdapter extends RecyclerView.Adapter<IngredientsAdapter.IngredientViewHolder> {
+public class IngredientsAdapter
+        extends RecyclerView.Adapter<IngredientsAdapter.IngredientViewHolder> {
 
+    /* ─── Callbacks ─────────────────────────────────────────── */
     public interface IngredientActions {
-
         void onIngredientChecked(int position, boolean isChecked);
 
         void onItemClick(int position);
@@ -35,99 +34,99 @@ public class IngredientsAdapter extends RecyclerView.Adapter<IngredientsAdapter.
         void onItemLongClick(int position);
     }
 
+    /* ─── Data ──────────────────────────────────────────────── */
     private final List<Ingredient> ingredientList;
     private final Context context;
     private final IngredientActions ingredientActions;
-    private final SimpleDateFormat dateFormat = new SimpleDateFormat("dd MMM yyyy", Locale.getDefault());
+    private final SimpleDateFormat dateFormat =
+            new SimpleDateFormat("dd MMM yyyy", Locale.getDefault());
 
-    public IngredientsAdapter(Context context, List<Ingredient> ingredientList, IngredientActions ingredientActions) {
-        this.context = context;
-        this.ingredientList = ingredientList;
-        this.ingredientActions = ingredientActions;
+    public IngredientsAdapter(Context ctx,
+                              List<Ingredient> list,
+                              IngredientActions actions) {
+        this.context = ctx;
+        this.ingredientList = list;
+        this.ingredientActions = actions;
     }
 
+    /* ─── Required overrides ───────────────────────────────── */
     @NonNull
     @Override
     public IngredientViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        View view = LayoutInflater.from(context).inflate(R.layout.ingredient_item, parent, false);
-        return new IngredientViewHolder(view);
+        View v = LayoutInflater.from(context)
+                .inflate(R.layout.ingredient_item, parent, false);
+        return new IngredientViewHolder(v);
     }
 
     @Override
     public void onBindViewHolder(@NonNull IngredientViewHolder holder, int position) {
-        Ingredient ingredient = ingredientList.get(position);
-        holder.nameTextView.setText(ingredient.getName());
-        if (ingredient.isAcquired()) {
-            holder.nameTextView.setPaintFlags(holder.nameTextView.getPaintFlags() | android.graphics.Paint.STRIKE_THRU_TEXT_FLAG);
-        } else {
-            holder.nameTextView.setPaintFlags(holder.nameTextView.getPaintFlags() & (~android.graphics.Paint.STRIKE_THRU_TEXT_FLAG));
-        }
-        holder.quantityTextView.setText(String.valueOf(ingredient.getQuantity()));
-        holder.priceTextView.setText(context.getString(R.string.ingredient_price_format, ingredient.getPrice()));
+        Ingredient ing = ingredientList.get(position);
 
-        holder.acquiredCheckBox.setChecked(ingredient.isAcquired());
+        holder.nameTextView.setText(ing.getName());
+        holder.quantityTextView.setText(String.valueOf(ing.getQuantity()));
+        holder.priceTextView.setText(
+                context.getString(R.string.ingredient_price_format, ing.getPrice()));
 
-        // Show/hide acquired info
-        if (ingredient.isAcquired()) {
+        holder.acquiredCheckBox.setOnCheckedChangeListener(null);
+        holder.acquiredCheckBox.setChecked(ing.isAcquired());
+
+        if (ing.isAcquired()) {
+            holder.nameTextView.setPaintFlags(
+                    holder.nameTextView.getPaintFlags()
+                            | android.graphics.Paint.STRIKE_THRU_TEXT_FLAG);
             holder.acquiredByTextView.setVisibility(View.VISIBLE);
             holder.acquiredDateTextView.setVisibility(View.VISIBLE);
-                        
-            holder.acquiredByTextView.setText(context.getString(R.string.ingredient_acquired_by, ingredient.getAcquiredBy() != null ? ingredient.getAcquiredBy() : "Unknown"));
-            holder.acquiredDateTextView.setText(formatDate(ingredient.getAcquiredAt()));
+            holder.acquiredByTextView.setText(
+                    context.getString(R.string.ingredient_acquired_by,
+                            ing.getAcquiredBy() == null ? "Unknown" : ing.getAcquiredBy()));
+            holder.acquiredDateTextView.setText(formatDate(ing.getAcquiredAt()));
         } else {
+            holder.nameTextView.setPaintFlags(
+                    holder.nameTextView.getPaintFlags()
+                            & ~android.graphics.Paint.STRIKE_THRU_TEXT_FLAG);
             holder.acquiredByTextView.setVisibility(View.GONE);
             holder.acquiredDateTextView.setVisibility(View.GONE);
         }
 
-        // Checkbox listener
-        holder.acquiredCheckBox.setOnCheckedChangeListener((buttonView, isChecked) -> {
-            if (ingredientActions != null) {
-                ingredientActions.onIngredientChecked(holder.getBindingAdapterPosition(), isChecked);
-            }
-        });
+        holder.acquiredCheckBox.setOnCheckedChangeListener(
+                (btn, isChecked) ->
+                        ingredientActions.onIngredientChecked(
+                                holder.getBindingAdapterPosition(), isChecked));
 
-        // Item click listeners
-        holder.itemView.setOnClickListener(v -> {
-            if (ingredientActions != null) {
-                ingredientActions.onItemClick(holder.getBindingAdapterPosition());
-            }
-        });
+        holder.itemView.setOnClickListener(
+                v -> ingredientActions.onItemClick(holder.getBindingAdapterPosition()));
+
         holder.itemView.setOnLongClickListener(v -> {
-            if (ingredientActions != null) {
-                ingredientActions.onItemLongClick(holder.getBindingAdapterPosition());
-                return true;
-            }
-            return false;
+            ingredientActions.onItemLongClick(holder.getBindingAdapterPosition());
+            return true;
         });
-    }
-
-    private String formatDate(long timestamp) {
-        if (timestamp <= 0) {
-            return "N/A";
-        }
-        try {
-            return dateFormat.format(new Date(timestamp));
-        } catch (Exception e) {
-            return "Invalid Date";
-        }
     }
 
     @Override
     public int getItemCount() {
-        return ingredientList != null ? ingredientList.size() : 0;
+        return ingredientList.size();
     }
 
-    public List<Ingredient> getIngredientList() {
-        return ingredientList;
+    /* ─── Public helper ────────────────────────────────────── */
+    public void updateIngredients(List<Ingredient> newList) {
+        ingredientList.clear();
+        ingredientList.addAll(newList);
+        notifyDataSetChanged();
     }
 
-    class IngredientViewHolder extends RecyclerView.ViewHolder {
+    /* ─── Internals ────────────────────────────────────────── */
+    private String formatDate(long ts) {
+        return ts > 0 ? dateFormat.format(new Date(ts)) : "N/A";
+    }
 
-        TextView nameTextView, quantityTextView, priceTextView, acquiredByTextView, acquiredDateTextView;
+    /* ─── ViewHolder ───────────────────────────────────────── */
+    static class IngredientViewHolder extends RecyclerView.ViewHolder {
+        TextView nameTextView, quantityTextView, priceTextView,
+                acquiredByTextView, acquiredDateTextView;
         CheckBox acquiredCheckBox;
         ConstraintLayout layout;
 
-        public IngredientViewHolder(@NonNull View itemView) {
+        IngredientViewHolder(@NonNull View itemView) {
             super(itemView);
             nameTextView = itemView.findViewById(R.id.ingredientNameTextView);
             quantityTextView = itemView.findViewById(R.id.ingredientQuantityTextView);
@@ -136,8 +135,6 @@ public class IngredientsAdapter extends RecyclerView.Adapter<IngredientsAdapter.
             acquiredDateTextView = itemView.findViewById(R.id.ingredientAcquiredDateTextView);
             acquiredCheckBox = itemView.findViewById(R.id.ingredientAcquiredCheckBox);
             layout = itemView.findViewById(R.id.ingredientItemLayout);
-
-
         }
     }
 }
