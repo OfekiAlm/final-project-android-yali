@@ -179,15 +179,13 @@ public class EventActivity extends AppCompatActivity
     }
 
     private void updateTotals(int accepted) {
-        double sum = 0;
-        for (Ingredient i : ingList) sum += i.getPrice() * i.getQuantity();
-        double each = accepted == 0 ? 0 : sum / accepted;
-
-        DecimalFormat df = new DecimalFormat("#.##");
-
-        totalTv.setText("₪" + df.format(sum));
-        perTv.setText("₪" + df.format(each));
-        membersTv.setText(String.valueOf(accepted));
+        int sum = 0;
+        for (Ingredient i : ingList) sum += (int) (i.getPrice() * i.getQuantity());
+        int each = accepted == 0 ? 0 : sum / accepted;
+        
+        totalTv.setText("₪" + sum);
+        perTv.setText("₪" + each);
+        membersTv.setText(String.valueOf(accepted)); // This remains the same as it's a count
     }
 
     /* admin edit */
