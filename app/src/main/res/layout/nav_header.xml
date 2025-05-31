@@ -1,27 +1,49 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:orientation="vertical"
-    android:gravity="center_vertical"
+    android:gravity="center"
     android:layout_width="match_parent"
     android:layout_height="200dp"
-    android:padding="16dp"
-    android:background="?android:attr/colorBackground">
+    android:padding="24dp"
+    android:background="@drawable/gradient_background">
 
-    <ImageView
-        android:id="@+id/nav_header_image"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:src="@drawable/cart_logo"
-        android:contentDescription="@string/cart_logo" />
+    <!-- Logo Card -->
+    <androidx.cardview.widget.CardView
+        android:layout_width="80dp"
+        android:layout_height="80dp"
+        android:layout_marginBottom="16dp"
+        app:cardBackgroundColor="@android:color/white"
+        app:cardCornerRadius="16dp"
+        app:cardElevation="8dp">
 
-    <!-- Optional text under the image -->
+        <ImageView
+            android:id="@+id/nav_header_image"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:padding="16dp"
+            android:src="@drawable/cart_logo"
+            android:contentDescription="@string/cart_logo" />
+    </androidx.cardview.widget.CardView>
+
+    <!-- App Name -->
     <TextView
         android:id="@+id/nav_header_text"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="EasyShop"
-        android:textAppearance="?android:attr/textAppearanceLarge"
-        android:layout_marginTop="8dp"/>
+        android:fontFamily="@font/bungee"
+        android:textColor="@android:color/white"
+        android:textSize="24sp"/>
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="4dp"
+        android:text="Smart Shopping Made Easy"
+        android:textColor="@android:color/white"
+        android:textSize="14sp"
+        android:alpha="0.8" />
 
 </LinearLayout>

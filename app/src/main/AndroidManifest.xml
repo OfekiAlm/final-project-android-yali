@@ -7,6 +7,9 @@
     <uses-permission
         android:name="android.permission.CAMERA"
         tools:ignore="PermissionImpliesUnsupportedChromeOsHardware" />
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
+    <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" />
+    <uses-permission android:name="android.permission.USE_EXACT_ALARM" />
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
 
@@ -18,7 +21,7 @@
         android:label="@string/app_name"
         android:roundIcon="@drawable/cart_logo"
         android:supportsRtl="false"
-        android:theme="@style/Theme.FinalProjectYali"
+        android:theme="@style/AppTheme"
         tools:targetApi="31">
         <activity
             android:name=".ui.Home.GroupActivity"
@@ -55,30 +58,23 @@
             </intent-filter>
         </receiver>
 
+        <receiver
+            android:name="com.example.finalprojectyali.Extras.Utils$NotificationPublisher"
+            android:exported="false" />
+
         <activity
             android:name=".ui.Home.MainActivity"
-            android:exported="true"
-            android:theme="@style/Theme.Design.NoActionBar" />
+            android:exported="true" />
         <activity
             android:name=".ui.Auth.LoginActivity"
             android:exported="true" />
         <activity
             android:name=".ui.Auth.RegisterActivity"
             android:exported="true" />
-        <activity
-            android:name=".ui.JoinLink"
-            android:exported="true">
-            <intent-filter>
-                <data
-                    android:host="join"
-                    android:scheme="com.example.finalprojectyali" />
-
-                <action android:name="android.intent.action.VIEW" />
-
-                <category android:name="android.intent.category.DEFAULT" />
-                <category android:name="android.intent.category.BROWSABLE" />
-            </intent-filter>
-        </activity>
+        <activity android:name=".ui.Home.AddEventActivity"
+            android:exported="true"/>
+        <activity android:name=".ui.Home.EventActivity"
+            android:exported="true"/>
 
         <provider
             android:name="androidx.core.content.FileProvider"

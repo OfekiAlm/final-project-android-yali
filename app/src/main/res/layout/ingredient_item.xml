@@ -4,9 +4,11 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:layout_margin="8dp"
-    app:cardCornerRadius="8dp"
-    app:cardElevation="4dp">
+    android:layout_marginHorizontal="16dp"
+    android:layout_marginVertical="6dp"
+    app:cardBackgroundColor="@android:color/white"
+    app:cardCornerRadius="16dp"
+    app:cardElevation="2dp">
 
     <androidx.constraintlayout.widget.ConstraintLayout
         android:id="@+id/ingredientItemLayout"
@@ -14,93 +16,128 @@
         android:layout_height="wrap_content"
         android:padding="16dp">
 
-        <!-- ───── LEFT SECTION ───── -->
+        <!-- Category Icon Background -->
+        <androidx.cardview.widget.CardView
+            android:id="@+id/iconBackground"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            app:cardBackgroundColor="#F0F4FF"
+            app:cardCornerRadius="12dp"
+            app:cardElevation="0dp"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent">
+
+            <ImageView
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:layout_gravity="center"
+                android:src="@drawable/ic_baseline_shopping_basket"
+                app:tint="@color/primary_color" />
+        </androidx.cardview.widget.CardView>
 
         <!-- Ingredient name -->
         <TextView
             android:id="@+id/ingredientNameTextView"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:textAppearance="@style/TextAppearance.AppCompat.Large"
-            android:textStyle="bold"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintTop_toTopOf="parent"
-            tools:text="Milk" />
+            android:layout_marginStart="12dp"
+            android:layout_marginEnd="8dp"
+            android:fontFamily="sans-serif-medium"
+            android:textColor="#202020"
+            android:textSize="18sp"
+            app:layout_constraintEnd_toStartOf="@+id/ingredientAcquiredCheckBox"
+            app:layout_constraintStart_toEndOf="@+id/iconBackground"
+            app:layout_constraintTop_toTopOf="@+id/iconBackground"
+            tools:text="Fresh Milk" />
 
-        <!-- Quantity -->
-        <TextView
-            android:id="@+id/ingredientQuantityTextView"
+        <!-- Quantity and Price Container -->
+        <LinearLayout
+            android:id="@+id/detailsContainer"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_marginTop="4dp"
-            android:textAppearance="@style/TextAppearance.AppCompat.Body1"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintEnd_toStartOf="@id/rightGuideline"
-            app:layout_constraintTop_toBottomOf="@id/ingredientNameTextView"
-            tools:text="2" />
+            android:orientation="horizontal"
+            app:layout_constraintEnd_toEndOf="@+id/ingredientNameTextView"
+            app:layout_constraintStart_toStartOf="@+id/ingredientNameTextView"
+            app:layout_constraintTop_toBottomOf="@+id/ingredientNameTextView">
 
-        <!-- Price per item -->
-        <TextView
-            android:id="@+id/ingredientPriceTextView"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
-            android:drawablePadding="4dp"
-            android:gravity="center_vertical"
-            android:textAppearance="@style/TextAppearance.AppCompat.Small"
-            app:drawableStartCompat="@android:drawable/ic_menu_info_details"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintEnd_toStartOf="@id/rightGuideline"
-            app:layout_constraintTop_toBottomOf="@id/ingredientQuantityTextView"
-            tools:text="₪ 3.50 / item" />
+            <!-- Quantity Badge -->
+            <TextView
+                android:id="@+id/ingredientQuantityTextView"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:background="@drawable/quantity_badge_background"
+                android:paddingHorizontal="8dp"
+                android:paddingVertical="2dp"
+                android:textColor="@color/primary_color"
+                android:textSize="14sp"
+                android:textStyle="bold"
+                tools:text="×2" />
 
-        <!-- ───── RIGHT SECTION ───── -->
+            <!-- Price -->
+            <TextView
+                android:id="@+id/ingredientPriceTextView"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="12dp"
+                android:drawablePadding="4dp"
+                android:gravity="center_vertical"
+                android:textColor="@color/text_secondary"
+                android:textSize="14sp"
+                app:drawableStartCompat="@drawable/ic_baseline_price_tag"
+                app:drawableTint="@color/text_secondary"
+                tools:text="₪ 3.50 / item" />
+        </LinearLayout>
 
-        <!-- Vertical guideline at 65 % -->
-        <androidx.constraintlayout.widget.Guideline
-            android:id="@+id/rightGuideline"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:orientation="vertical"
-            app:layout_constraintGuide_percent="0.65" />
-
-        <!-- Checkbox to acquire / release -->
-        <CheckBox
+        <!-- Modern Checkbox -->
+        <com.google.android.material.checkbox.MaterialCheckBox
             android:id="@+id/ingredientAcquiredCheckBox"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginEnd="4dp"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintTop_toTopOf="@id/ingredientNameTextView"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintBottom_toBottomOf="@+id/detailsContainer"
             tools:checked="false" />
 
-        <!-- Acquired by (hidden until acquired) -->
-        <TextView
-            android:id="@+id/ingredientAcquiredByTextView"
+        <!-- Acquired Info Container (hidden until acquired) -->
+        <LinearLayout
+            android:id="@+id/acquiredInfoContainer"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:background="@drawable/acquired_info_background"
+            android:orientation="vertical"
+            android:padding="8dp"
             android:visibility="gone"
-            android:textAppearance="@style/TextAppearance.AppCompat.Small"
-            android:textColor="@android:color/holo_green_dark"
-            app:layout_constraintStart_toStartOf="@id/rightGuideline"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/ingredientNameTextView"
-            tools:text="Acquired by: Ofek" />
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/iconBackground"
+            tools:visibility="visible">
 
-        <!-- Acquired date (hidden until acquired) -->
-        <TextView
-            android:id="@+id/ingredientAcquiredDateTextView"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:visibility="gone"
-            android:layout_marginTop="4dp"
-            android:textAppearance="@style/TextAppearance.AppCompat.Small"
-            android:textColor="@android:color/darker_gray"
-            app:layout_constraintStart_toStartOf="@id/rightGuideline"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/ingredientAcquiredByTextView"
-            tools:text="12 May 2025" />
+            <!-- Acquired by -->
+            <TextView
+                android:id="@+id/ingredientAcquiredByTextView"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:drawablePadding="4dp"
+                android:textColor="@color/success_color"
+                android:textSize="13sp"
+                android:textStyle="bold"
+                app:drawableStartCompat="@drawable/ic_baseline_check_circle"
+                app:drawableTint="@color/success_color"
+                tools:text="Acquired by: Ofek" />
+
+            <!-- Acquired date -->
+            <TextView
+                android:id="@+id/ingredientAcquiredDateTextView"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="20dp"
+                android:layout_marginTop="2dp"
+                android:textColor="@color/text_secondary"
+                android:textSize="12sp"
+                tools:text="12 May 2025 at 14:30" />
+        </LinearLayout>
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 

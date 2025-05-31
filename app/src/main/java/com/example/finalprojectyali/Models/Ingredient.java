@@ -1,7 +1,7 @@
 package com.example.finalprojectyali.Models;
 
 /**
- * Represents a single ingredient in a group’s shopping list.
+ * Represents a single ingredient in a group's shopping list.
  *
  * <p>The {@code key} property holds the Firebase child-ID (push-ID) used
  * to store this ingredient under <code>/groups/&lt;groupKey&gt;/ingredients/&lt;key&gt;</code>.
@@ -20,7 +20,8 @@ public class Ingredient {
 
     /* Acquisition info --------------------------------------------------- */
     private boolean acquired;     // true if already bought
-    private String acquiredBy;   // display name of the buyer
+    private String acquiredByUID;   // UId of the buyer
+    private String acquiredByName; // Name of the buyer
     private long acquiredAt;   // epoch-ms when bought
 
     /* ------------------------------------------------------------------- */
@@ -38,14 +39,16 @@ public class Ingredient {
                       double price,
                       int quantity,
                       boolean acquired,
-                      String acquiredBy,
+                      String acquiredByUID,
+                      String acquiredByName,
                       long acquiredAt) {
 
         this.name = name;
         this.price = price;
         this.quantity = quantity;
         this.acquired = acquired;
-        this.acquiredBy = acquiredBy;
+        this.acquiredByUID = acquiredByUID;
+        this.acquiredByName = acquiredByName;
         this.acquiredAt = acquiredAt;
     }
 
@@ -95,12 +98,12 @@ public class Ingredient {
         this.acquired = a;
     }
 
-    public String getAcquiredBy() {
-        return acquiredBy;
+    public String getAcquiredByUID() {
+        return acquiredByUID;
     }
 
-    public void setAcquiredBy(String u) {
-        this.acquiredBy = u;
+    public void setAcquiredByUID(String u) {
+        this.acquiredByUID = u;
     }
 
     public long getAcquiredAt() {
@@ -109,6 +112,14 @@ public class Ingredient {
 
     public void setAcquiredAt(long t) {
         this.acquiredAt = t;
+    }
+
+    public String getAcquiredByName() {
+        return acquiredByName;
+    }
+
+    public void setAcquiredByName(String acquiredByName) {
+        this.acquiredByName = acquiredByName;
     }
 
     /* ------------------------------------------------------------------- */
@@ -122,7 +133,7 @@ public class Ingredient {
                 ", price=" + price +
                 ", quantity=" + quantity +
                 ", acquired=" + acquired +
-                ", acquiredBy='" + acquiredBy + '\'' +
+                ", acquiredBy='" + acquiredByUID + '\'' +
                 ", acquiredAt=" + acquiredAt +
                 '}';
     }

@@ -1,11 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <menu xmlns:android="http://schemas.android.com/apk/res/android">
-    <group android:checkableBehavior="none">
-        <item
-            android:id="@+id/nav_join_by_code"
-            android:icon="@drawable/ic_baseline_code"
-            android:title="Join by Code" />
-    </group>
+
     <group android:checkableBehavior="none">
         <item
             android:id="@+id/nav_settings"

@@ -1,31 +1,25 @@
 <PreferenceScreen xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:android="http://schemas.android.com/apk/res/android">
 
-    <PreferenceCategory app:title="@string/app_name">
+    <PreferenceCategory app:title="Notifications">
+        
         <CheckBoxPreference
             app:key="want_notifications"
-            app:title="Want to get daily notifications?"
-            app:summaryOff="mark the checkbox in-order to enable the notifications"
-            app:summaryOn="un-check the checkbox in-order to disable daily notifications"
-            />
+            app:title="Event Notifications"
+            app:summaryOff="Tap to enable notifications one day before events"
+            app:summaryOn="You will receive notifications one day before events"
+            app:defaultValue="true"/>
+            
         <EditTextPreference
             app:dependency="want_notifications"
             app:key="time_selector"
-            app:title="Select Time for notifications"
+            app:title="Notification Time"
             app:useSimpleSummaryProvider="true"
-            app:summary="Tap to select time"
-            />
+            app:summary="09:00"
+            app:defaultValue="09:00"
+            app:dialogTitle="Select notification time"
+            app:dialogMessage="Choose what time you want to receive event reminders"/>
+            
     </PreferenceCategory>
-    <PreferenceCategory app:title="Theme">
-
-        <SwitchPreferenceCompat
-            app:key="dark_theme"
-            app:title="Dark theme"
-            app:summaryOff="Tap the switch to enable dark theme"
-            app:summaryOn="Tap the switch to enable light theme"
-            app:defaultValue="true"/>
-
-    </PreferenceCategory>
-
 
 </PreferenceScreen>

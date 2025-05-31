@@ -3,7 +3,7 @@
     <string name="cart_logo">logo of the app\n</string>
     <string name="navigation_drawer_open">Open navigation bar</string>
     <string name="navigation_drawer_close">Close navigation bar</string>
-    <string name="go_to_login"><b><font color='#000000'>Already have a user?</font></b> <b> <font color='#E1574C'> Login</font></b></string>
+    <string name="go_to_login"><b><font color='#000000'>Already have a user?</font></b> <b> <font color='#3977db'> Login</font></b></string>
     <string name="let_user_decide_airplane_mode">Do you want to let me determine if you\'re still working on this task or not? Click <font color='#8463f6'><b>here</b></font>\n\nThe ✈ mode will be enabled forcing you to concentrate. \nWarning: Don\'t even think to disable the ✈ mode.. 😉</string>
     <string name="login_email">email</string>
     <string name="login_password">password</string>
@@ -11,4 +11,8 @@
     <string name="group_members_count">Member Count </string>
     <string name="ingredient_price_format">₪ %.2f / item</string>
     <string name="ingredient_acquired_by">Acquired by: %1$s</string>
+    <string name="event_total_format">Total spent: ₪%1$s</string>
+    <string name="event_each_format">Each member pays: ₪%1$s</string>
+    <string name="event_members_format">Accepted members: %1$d</string>
+    <string name="event_details">🎉 Event Details:</string>
 </resources>

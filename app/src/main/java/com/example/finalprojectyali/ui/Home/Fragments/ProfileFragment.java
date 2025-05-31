@@ -29,6 +29,8 @@ import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
 
+import java.util.Objects;
+
 import de.hdodenhof.circleimageview.CircleImageView;
 
 /**
@@ -47,7 +49,7 @@ public class ProfileFragment extends Fragment {
     String userEmail;
 
     /** The views to display the user's email and phone  */
-    TextView userEmailTv, userPhoneTv;
+    TextView usernameTv,userEmailTv, userPhoneTv;
 
     /** The user's phone number */
     String userPhoneNumber;
@@ -76,7 +78,7 @@ public class ProfileFragment extends Fragment {
         userEmail = getEmail();
         userEmailTv = view.findViewById(R.id.task_name_et);
         userEmailTv.setText(userEmail);
-
+        usernameTv = view.findViewById(R.id.user_name_display);
         userPhoneTv = view.findViewById(R.id.phone_textview_profile_from_fb);
     }
 
@@ -126,6 +128,7 @@ public class ProfileFragment extends Fragment {
             String str_p_num = dataSnapshot.getValue(String.class);
             userPhoneNumber = str_p_num;
             userPhoneTv.setText(userPhoneNumber);
+            usernameTv.setText(Objects.requireNonNull(FirebaseAuth.getInstance().getCurrentUser()).getDisplayName());
             Log.d("AuthData","lol that's worked actually");
         }).addOnFailureListener(e -> {
             // Handle any errors here

@@ -78,7 +78,7 @@ public class IngredientsAdapter
             holder.acquiredDateTextView.setVisibility(View.VISIBLE);
             holder.acquiredByTextView.setText(
                     context.getString(R.string.ingredient_acquired_by,
-                            ing.getAcquiredBy() == null ? "Unknown" : ing.getAcquiredBy()));
+                            ing.getAcquiredByUID() == null ? "Unknown" : ing.getAcquiredByName()));
             holder.acquiredDateTextView.setText(formatDate(ing.getAcquiredAt()));
         } else {
             holder.nameTextView.setPaintFlags(
