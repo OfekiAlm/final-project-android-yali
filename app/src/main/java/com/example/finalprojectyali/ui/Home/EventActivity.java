@@ -182,7 +182,7 @@ public class EventActivity extends AppCompatActivity
         int sum = 0;
         for (Ingredient i : ingList) sum += (int) (i.getPrice() * i.getQuantity());
         int each = accepted == 0 ? 0 : sum / accepted;
-        
+
         totalTv.setText("₪" + sum);
         perTv.setText("₪" + each);
         membersTv.setText(String.valueOf(accepted)); // This remains the same as it's a count
