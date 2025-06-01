@@ -4,7 +4,6 @@ import androidx.annotation.NonNull;
 
 import com.example.finalprojectyali.Models.Event;
 import com.google.android.gms.tasks.Task;
-import com.google.android.gms.tasks.TaskCompletionSource;
 import com.google.android.gms.tasks.Tasks;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.DataSnapshot;
@@ -15,7 +14,6 @@ import com.google.firebase.database.MutableData;
 import com.google.firebase.database.ServerValue;
 import com.google.firebase.database.Transaction;
 
-import java.security.SecureRandom;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
@@ -23,61 +21,51 @@ import java.util.function.Consumer;
 
 public final class EventRepository {
 
-    private static final DatabaseReference ROOT = FirebaseDatabase.getInstance().getReference();
+    private static final DatabaseReference ROOT   = FirebaseDatabase.getInstance().getReference();
     private static final DatabaseReference EVENTS = ROOT.child("Events");
-    private static final DatabaseReference JOIN_CODES = ROOT.child("joinCodes");
-
-    private static final SecureRandom RNG = new SecureRandom();
-    private static final String ALPHA_NUM = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
 
     /*───────────────────────────────────────────────────────────────
-      1. Create event
+      1. Create event   (join-codes removed)
     ───────────────────────────────────────────────────────────────*/
     public static Task<Event> createEvent(String name,
                                           String description,
-                                          Date when,
+                                          Date   when,
                                           String whereAddress,
                                           @NonNull Consumer<Event> onSuccess,
                                           @NonNull Consumer<Exception> onError) {
 
         String uid = FirebaseAuth.getInstance().getUid();
-        if (uid == null) return Tasks.forException(new IllegalStateException("Not signed in"));
+        if (uid == null)
+            return Tasks.forException(new IllegalStateException("Not signed in"));
 
         String pushKey = EVENTS.push().getKey();
 
-        return generateUniqueCodeAsync()
-                .continueWithTask(codeTask -> {
-                    if (!codeTask.isSuccessful())
-                        return Tasks.forException(codeTask.getException());
+        Event e = new Event(name, description, when.getTime(), whereAddress, uid);
+        e.setKey(pushKey);
 
-                    String joinCode = codeTask.getResult();
-                    Event e = new Event(name, description, when.getTime(), whereAddress, uid, joinCode);
-                    e.setKey(pushKey);
+        Map<String, Object> fanOut = new HashMap<>();
+        fanOut.put("/Events/" + pushKey, e);
+        fanOut.put("/Users/" + uid + "/Events/" + pushKey, "accepted");
 
-                    Map<String, Object> fanOut = new HashMap<>();
-                    fanOut.put("/Events/" + pushKey, e);
-                    fanOut.put("/joinCodes/" + joinCode, pushKey);
-                    fanOut.put("/Users/" + uid + "/Events/" + pushKey, "accepted");
-
-                    return ROOT.updateChildren(fanOut).continueWith(t -> e);
-                })
+        return ROOT.updateChildren(fanOut)
+                .continueWith(t -> e)
                 .addOnSuccessListener(onSuccess::accept)
                 .addOnFailureListener(onError::accept);
     }
 
-    /* ───────────────────────────────────────────────────────────────────
-   1-b.  Admin: update basic event details (name/desc/date/location)
-   ─────────────────────────────────────────────────────────────────── */
+    /*───────────────────────────────────────────────────────────────
+      1-b.  Admin: update basic event details
+    ───────────────────────────────────────────────────────────────*/
     public static Task<Void> updateEvent(String eventId,
                                          String name,
                                          String description,
-                                         long when,
+                                         long   when,
                                          String whereAddress) {
 
         Map<String, Object> upd = new HashMap<>();
-        upd.put("name", name);
-        upd.put("description", description);
-        upd.put("eventDate", when);
+        upd.put("name",            name);
+        upd.put("description",     description);
+        upd.put("eventDate",       when);
         upd.put("locationAddress", whereAddress);
 
         return EVENTS.child(eventId).updateChildren(upd);
@@ -92,8 +80,7 @@ public final class EventRepository {
 
         DatabaseReference evRef = EVENTS.child(eventId);
         evRef.runTransaction(new Transaction.Handler() {
-            @NonNull
-            @Override
+            @NonNull @Override
             public Transaction.Result doTransaction(@NonNull MutableData cur) {
                 Event e = cur.getValue(Event.class);
                 if (e == null) return Transaction.abort();
@@ -108,14 +95,15 @@ public final class EventRepository {
             @Override
             public void onComplete(DatabaseError e, boolean c, DataSnapshot d) {
                 if (c && e == null)
-                    ROOT.child("Users").child(uid).child("Events").child(eventId).setValue("pending")
+                    ROOT.child("Users").child(uid).child("Events")
+                            .child(eventId).setValue("pending")
                             .addOnSuccessListener(cb::accept);
             }
         });
     }
 
     /*───────────────────────────────────────────────────────────────
-      3. Admin: accept request
+      3. Admin: accept / reject member
     ───────────────────────────────────────────────────────────────*/
     public static void acceptMember(String eventId, String memberUid) {
         Map<String, Object> fanOut = new HashMap<>();
@@ -124,75 +112,118 @@ public final class EventRepository {
         ROOT.updateChildren(fanOut);
     }
 
-    /*───────────────────────────────────────────────────────────────
-      3b. Admin: reject request
-    ───────────────────────────────────────────────────────────────*/
     public static void rejectMember(String eventId, String memberUid) {
         Map<String, Object> fanOut = new HashMap<>();
-        fanOut.put("/Events/" + eventId + "/members/" + memberUid, null); // Remove from event
-        fanOut.put("/Users/" + memberUid + "/Events/" + eventId, null);   // Remove from user's events
+        fanOut.put("/Events/" + eventId + "/members/" + memberUid, null);
+        fanOut.put("/Users/" + memberUid + "/Events/" + eventId, null);
         ROOT.updateChildren(fanOut);
     }
 
     /*───────────────────────────────────────────────────────────────
-      4. Send notification to user
+      4. Push in-app notification to a user
     ───────────────────────────────────────────────────────────────*/
-    public static void sendNotification(String toUid, String title, String message, 
-                                      String type, String eventId, String eventName) {
-        DatabaseReference notifRef = ROOT.child("Users").child(toUid).child("notifications");
+    public static void sendNotification(String toUid,
+                                        String title,
+                                        String message,
+                                        String type,
+                                        String eventId,
+                                        String eventName) {
+
+        DatabaseReference notifRef = ROOT.child("Users")
+                .child(toUid)
+                .child("notifications");
         String pushKey = notifRef.push().getKey();
-        
-        Map<String, Object> notifData = new HashMap<>();
-        notifData.put("title", title);
-        notifData.put("message", message);
-        notifData.put("type", type);
-        notifData.put("eventId", eventId);
-        notifData.put("eventName", eventName);
-        notifData.put("timestamp", ServerValue.TIMESTAMP);
-        notifData.put("read", false);
-        notifData.put("key", pushKey);
-        
-        notifRef.child(pushKey).setValue(notifData);
+
+        Map<String, Object> data = new HashMap<>();
+        data.put("title",     title);
+        data.put("message",   message);
+        data.put("type",      type);
+        data.put("eventId",   eventId);
+        data.put("eventName", eventName);
+        data.put("timestamp", ServerValue.TIMESTAMP);
+        data.put("read",      false);
+        data.put("key",       pushKey);
+
+        notifRef.child(pushKey).setValue(data);
+    }
+
+    /*───────────────────────────────────────────────────────────────
+      5. Admin: completely delete an event
+    ───────────────────────────────────────────────────────────────*/
+    public static void deleteEvent(String eventId, @NonNull Consumer<Void> onSuccess, @NonNull Consumer<Exception> onError) {
+        // First, get the event to find all members
+        EVENTS.child(eventId).get().addOnSuccessListener(eventSnapshot -> {
+            if (!eventSnapshot.exists()) {
+                onError.accept(new Exception("Event not found"));
+                return;
+            }
+
+            Event event = eventSnapshot.getValue(Event.class);
+            if (event == null) {
+                onError.accept(new Exception("Failed to parse event data"));
+                return;
+            }
+
+            Map<String, Object> deletionUpdates = new HashMap<>();
+            
+            // Delete the main event
+            deletionUpdates.put("/Events/" + eventId, null);
+            
+            // Remove event from all members' user events
+            if (event.getMembers() != null) {
+                for (String memberUid : event.getMembers().keySet()) {
+                    deletionUpdates.put("/Users/" + memberUid + "/Events/" + eventId, null);
+                }
+            }
+            
+            // Remove notifications related to this event from all users
+            ROOT.child("Users").get().addOnSuccessListener(usersSnapshot -> {
+                for (DataSnapshot userSnapshot : usersSnapshot.getChildren()) {
+                    DataSnapshot notificationsSnapshot = userSnapshot.child("notifications");
+                    for (DataSnapshot notifSnapshot : notificationsSnapshot.getChildren()) {
+                        Map<String, Object> notifData = (Map<String, Object>) notifSnapshot.getValue();
+                        if (notifData != null && eventId.equals(notifData.get("eventId"))) {
+                            deletionUpdates.put("/Users/" + userSnapshot.getKey() + "/notifications/" + notifSnapshot.getKey(), null);
+                        }
+                    }
+                }
+                
+                // Execute all deletions atomically
+                ROOT.updateChildren(deletionUpdates)
+                        .addOnSuccessListener(aVoid -> onSuccess.accept(null))
+                        .addOnFailureListener(onError::accept);
+            }).addOnFailureListener(onError::accept);
+        }).addOnFailureListener(onError::accept);
+    }
+
+    /*───────────────────────────────────────────────────────────────
+      6. User: leave an event
+    ───────────────────────────────────────────────────────────────*/
+    public static void leaveEvent(String eventId, @NonNull Consumer<Void> onSuccess, @NonNull Consumer<Exception> onError) {
+        String uid = FirebaseAuth.getInstance().getUid();
+        if (uid == null) {
+            onError.accept(new IllegalStateException("Not signed in"));
+            return;
+        }
+
+        // Check if user is the owner (owners cannot leave, they must delete the event)
+        EVENTS.child(eventId).child("ownerUid").get().addOnSuccessListener(ownerSnapshot -> {
+            String ownerUid = ownerSnapshot.getValue(String.class);
+            if (uid.equals(ownerUid)) {
+                onError.accept(new Exception("Event owners cannot leave. Please delete the event instead."));
+                return;
+            }
+
+            Map<String, Object> leaveUpdates = new HashMap<>();
+            leaveUpdates.put("/Events/" + eventId + "/members/" + uid, null);
+            leaveUpdates.put("/Users/" + uid + "/Events/" + eventId, null);
+
+            ROOT.updateChildren(leaveUpdates)
+                    .addOnSuccessListener(aVoid -> onSuccess.accept(null))
+                    .addOnFailureListener(onError::accept);
+        }).addOnFailureListener(onError::accept);
     }
 
     /*───────────────────────────────────────────────────────────────*/
-    private static String randomCode() {
-        char[] buf = new char[4];
-        for (int i = 0; i < 4; i++) buf[i] = ALPHA_NUM.charAt(RNG.nextInt(ALPHA_NUM.length()));
-        return new String(buf);
-    }
-
-    private static Task<String> generateUniqueCodeAsync() {
-        TaskCompletionSource<String> tcs = new TaskCompletionSource<>();
-        attemptReserve(tcs);
-        return tcs.getTask();
-    }
-
-    private static void attemptReserve(TaskCompletionSource<String> tcs) {
-        String code = randomCode();
-        DatabaseReference ref = JOIN_CODES.child(code);
-
-        ref.runTransaction(new Transaction.Handler() {
-            @NonNull
-            @Override
-            public Transaction.Result doTransaction(@NonNull MutableData cur) {
-                if (cur.getValue() != null) return Transaction.abort();
-                cur.setValue(true);
-                return Transaction.success(cur);
-            }
-
-            @Override
-            public void onComplete(DatabaseError e, boolean c, DataSnapshot d) {
-                if (e != null) {
-                    tcs.setException(e.toException());
-                    return;
-                }
-                if (c) tcs.setResult(code);
-                else attemptReserve(tcs);
-            }
-        });
-    }
-
-    private EventRepository() {
-    }
+    private EventRepository() {}
 }

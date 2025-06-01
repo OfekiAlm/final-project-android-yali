@@ -36,18 +36,6 @@
                     app:civ_border_width="3dp" />
             </androidx.cardview.widget.CardView>
 
-            <!-- User Name -->
-            <TextView
-                android:id="@+id/user_name_display"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_gravity="center_horizontal"
-                android:layout_marginTop="16dp"
-                android:fontFamily="@font/bungee"
-                android:text="User Name"
-                android:textColor="?android:attr/textColorPrimary"
-                android:textSize="24sp" />
-
             <!-- Profile Info Card -->
             <androidx.cardview.widget.CardView
                 android:layout_width="match_parent"
@@ -71,7 +59,8 @@
                         android:fontFamily="@font/bungee"
                         android:text="Profile Information"
                         android:textColor="@color/primary_color"
-                        android:textSize="20sp" />
+                        android:textSize="20sp"
+                        android:maxLength="9" />
 
                     <!-- Email Field -->
                     <TextView
@@ -101,8 +90,6 @@
                             android:id="@+id/task_name_et"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:focusable="false"
-                            android:focusableInTouchMode="false"
                             android:inputType="textEmailAddress"
                             android:textColor="?android:attr/textColorPrimary" />
                     </com.google.android.material.textfield.TextInputLayout>
@@ -136,8 +123,6 @@
                             android:id="@+id/phone_textview_profile_from_fb"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:focusable="false"
-                            android:focusableInTouchMode="false"
                             android:inputType="phone"
                             android:textColor="?android:attr/textColorPrimary" />
                     </com.google.android.material.textfield.TextInputLayout>

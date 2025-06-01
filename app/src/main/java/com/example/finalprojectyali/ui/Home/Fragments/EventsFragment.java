@@ -175,37 +175,96 @@ public class EventsFragment extends Fragment implements RecyclerViewFunctionalit
 
     /*──────────────── RecyclerViewFunctionalities ───────────────*/
     @Override
-    public void onItemClick(int pos) {
-        // find which adapter triggered the click
-        // simplistic approach: search lists
-        Event e = null;
-        if (pos < going.size()) e = going.get(pos);
-        else if (pos < going.size() + pending.size()) e = pending.get(pos - going.size());
-        else e = available.get(pos - going.size() - pending.size());
+    public void onEventClick(Event e) {
 
         switch (e.getStatus()) {
             case ACCEPTED:
                 Intent i = new Intent(requireContext(), EventActivity.class);
-                i.putExtra("event_id", e.getKey());
+                i.putExtra("event_id",   e.getKey());
                 i.putExtra("event_name", e.getName());
                 i.putExtra("event_desc", e.getDescription());
-                i.putExtra("event_loc", e.getLocationAddress());
-                i.putExtra("event_owner", e.getOwnerUid());
+                i.putExtra("event_loc",  e.getLocationAddress());
+                i.putExtra("event_owner",e.getOwnerUid());
                 i.putExtra("event_time", e.getEventDate());
                 startActivity(i);
                 break;
+
             case PENDING:
-                // no‑op or maybe let user cancel request
+                // let the user cancel a request here if you want
                 break;
+
             case AVAILABLE:
-                EventRepository.requestJoin(e.getKey(), v -> {/*toast*/});
+                EventRepository.requestJoin(e.getKey(), v -> {/* toast, snackbar, etc. */});
                 break;
         }
     }
 
+    @Override public boolean onEventLongClick(Event e) { 
+        String currentUid = FirebaseAuth.getInstance().getUid();
+        if (currentUid == null) return false;
+        
+        boolean isOwner = currentUid.equals(e.getOwnerUid());
+        
+        if (isOwner) {
+            // Show delete option for event owner
+            new android.app.AlertDialog.Builder(requireContext())
+                    .setTitle("Delete Event")
+                    .setMessage("Are you sure you want to delete \"" + e.getName() + "\"? This action cannot be undone and will remove the event for all members.")
+                    .setPositiveButton("Delete", (dialog, which) -> {
+                        EventRepository.deleteEvent(e.getKey(), 
+                            v -> {
+                                Toast.makeText(requireContext(), "Event deleted successfully", Toast.LENGTH_SHORT).show();
+                            },
+                            error -> {
+                                Toast.makeText(requireContext(), "Failed to delete event: " + error.getMessage(), Toast.LENGTH_LONG).show();
+                            }
+                        );
+                    })
+                    .setNegativeButton("Cancel", null)
+                    .show();
+        } else {
+            // Show leave option for regular member
+            new android.app.AlertDialog.Builder(requireContext())
+                    .setTitle("Leave Event")
+                    .setMessage("Are you sure you want to leave \"" + e.getName() + "\"?")
+                    .setPositiveButton("Leave", (dialog, which) -> {
+                        EventRepository.leaveEvent(e.getKey(),
+                            v -> {
+                                Toast.makeText(requireContext(), "Left event successfully", Toast.LENGTH_SHORT).show();
+                            },
+                            error -> {
+                                Toast.makeText(requireContext(), "Failed to leave event: " + error.getMessage(), Toast.LENGTH_LONG).show();
+                            }
+                        );
+                    })
+                    .setNegativeButton("Cancel", null)
+                    .show();
+        }
+        
+        return true;
+    }
+
     @Override
-    public boolean onItemLongClick(int p) {
-        return false;
+    public void onMapIconClick(Event e) {
+        String address = e.getLocationAddress();
+        if (address != null && !address.trim().isEmpty()) {
+            // Create intent to open Google Maps with the address
+            String uri = "geo:0,0?q=" + android.net.Uri.encode(address);
+            Intent mapIntent = new Intent(Intent.ACTION_VIEW, android.net.Uri.parse(uri));
+            mapIntent.setPackage("com.google.android.apps.maps");
+            
+            // Check if Google Maps is installed
+            if (mapIntent.resolveActivity(requireContext().getPackageManager()) != null) {
+                startActivity(mapIntent);
+            } else {
+                // Fallback: open in browser
+                String browserUri = "https://maps.google.com/?q=" + android.net.Uri.encode(address);
+                Intent browserIntent = new Intent(Intent.ACTION_VIEW, android.net.Uri.parse(browserUri));
+                startActivity(browserIntent);
+            }
+        } else {
+            Toast.makeText(requireContext(), "No location available for this event", Toast.LENGTH_SHORT).show();
+        }
     }
 
     /*──────────────── Section header adapter ───────────────*/

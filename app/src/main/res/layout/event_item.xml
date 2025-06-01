@@ -5,7 +5,7 @@
     android:layout_height="wrap_content"
     android:layout_marginHorizontal="8dp"
     android:layout_marginVertical="6dp"
-    app:cardBackgroundColor="@android:color/white"
+    app:cardBackgroundColor="@color/card_background_dark"
     app:cardCornerRadius="16dp"
     app:cardElevation="2dp">
 
@@ -14,31 +14,28 @@
         android:layout_height="wrap_content"
         android:padding="16dp">
 
-        <!-- Color Accent Bar -->
         <View
             android:id="@+id/accent_bar"
             android:layout_width="4dp"
             android:layout_height="0dp"
             android:background="@color/primary_color"
+            app:layout_constraintTop_toTopOf="parent"
             app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent" />
+            app:layout_constraintStart_toStartOf="parent"/>
 
-        <!-- Title -->
         <TextView
             android:id="@+id/ev_title"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_marginStart="12dp"
             android:fontFamily="sans-serif-medium"
-            android:textColor="#202020"
+            android:textColor="@android:color/white"
             android:textSize="18sp"
             android:textStyle="bold"
-            app:layout_constraintEnd_toStartOf="@+id/ev_map_icon_container"
-            app:layout_constraintStart_toEndOf="@+id/accent_bar"
-            app:layout_constraintTop_toTopOf="parent" />
+            app:layout_constraintStart_toEndOf="@id/accent_bar"
+            app:layout_constraintEnd_toStartOf="@id/ev_map_icon_container"
+            app:layout_constraintTop_toTopOf="parent"/>
 
-        <!-- Map icon -->
         <androidx.cardview.widget.CardView
             android:id="@+id/ev_map_icon_container"
             android:layout_width="40dp"
@@ -47,20 +44,19 @@
             app:cardBackgroundColor="@color/primary_color"
             app:cardCornerRadius="20dp"
             app:cardElevation="0dp"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintTop_toTopOf="parent">
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintEnd_toEndOf="parent">
 
             <ImageView
                 android:id="@+id/ev_map_icon"
                 android:layout_width="24dp"
                 android:layout_height="24dp"
                 android:layout_gravity="center"
-                android:contentDescription="Map"
+                android:contentDescription="map"
                 android:src="@drawable/ic_baseline_map_24"
-                app:tint="@android:color/white" />
+                android:tint="@android:color/white"/>
         </androidx.cardview.widget.CardView>
 
-        <!-- Description -->
         <TextView
             android:id="@+id/ev_desc"
             android:layout_width="0dp"
@@ -70,11 +66,10 @@
             android:maxLines="2"
             android:textColor="@color/text_secondary"
             android:textSize="14sp"
-            app:layout_constraintEnd_toEndOf="@+id/ev_title"
-            app:layout_constraintStart_toStartOf="@+id/ev_title"
-            app:layout_constraintTop_toBottomOf="@+id/ev_title" />
+            app:layout_constraintStart_toStartOf="@id/ev_title"
+            app:layout_constraintEnd_toEndOf="@id/ev_title"
+            app:layout_constraintTop_toBottomOf="@id/ev_title"/>
 
-        <!-- Date with icon -->
         <LinearLayout
             android:id="@+id/date_container"
             android:layout_width="wrap_content"
@@ -82,14 +77,14 @@
             android:layout_marginTop="12dp"
             android:gravity="center_vertical"
             android:orientation="horizontal"
-            app:layout_constraintStart_toStartOf="@+id/ev_desc"
-            app:layout_constraintTop_toBottomOf="@+id/ev_desc">
+            app:layout_constraintStart_toStartOf="@id/ev_desc"
+            app:layout_constraintTop_toBottomOf="@id/ev_desc">
 
             <ImageView
                 android:layout_width="16dp"
                 android:layout_height="16dp"
                 android:src="@drawable/ic_baseline_calendar"
-                app:tint="@color/text_secondary" />
+                android:tint="@color/text_secondary"/>
 
             <TextView
                 android:id="@+id/ev_date"
@@ -97,22 +92,29 @@
                 android:layout_height="wrap_content"
                 android:layout_marginStart="4dp"
                 android:textColor="@color/text_secondary"
-                android:textSize="13sp" />
+                android:textSize="13sp"/>
         </LinearLayout>
 
-        <!-- Status chip -->
+        <TextView
+            android:id="@+id/ev_members_count"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:drawableLeft="@drawable/ic_baseline_person"
+            android:drawablePadding="4dp"
+            android:textColor="@color/text_secondary"
+            android:textSize="13sp"
+            app:layout_constraintStart_toStartOf="@id/date_container"
+            app:layout_constraintTop_toBottomOf="@id/date_container"
+            app:layout_constraintBottom_toBottomOf="parent"/>
+
         <com.google.android.material.chip.Chip
             android:id="@+id/ev_status_chip"
             android:layout_width="wrap_content"
             android:layout_height="32dp"
             android:textSize="12sp"
-            app:chipBackgroundColor="@color/chip_background_selector"
             app:chipCornerRadius="16dp"
             app:chipStrokeColor="@android:color/transparent"
-            app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/ev_map_icon_container" />
-
+            app:layout_constraintBottom_toBottomOf="parent"/>
     </androidx.constraintlayout.widget.ConstraintLayout>
-
 </androidx.cardview.widget.CardView>
