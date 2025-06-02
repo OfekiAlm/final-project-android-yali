@@ -66,14 +66,7 @@ public class EventsFragment extends Fragment implements RecyclerViewFunctionalit
     @Override
     public void onViewCreated(@NonNull View v, @Nullable Bundle b) {
         super.onViewCreated(v, b);
-        long tenSecondsFromNow = System.currentTimeMillis() + 10_000;
-        Utils.scheduleNotification(
-                getContext(),
-                tenSecondsFromNow,
-                "Break time",
-                "Stand up and stretch!",
-                R.drawable.baseline_notification_important      // or 0 for default
-        );
+
         rv = v.findViewById(R.id.events_rv);
         rv.setLayoutManager(new LinearLayoutManager(requireContext()));
 

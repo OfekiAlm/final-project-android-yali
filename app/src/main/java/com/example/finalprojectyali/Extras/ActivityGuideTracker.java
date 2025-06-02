@@ -50,24 +50,6 @@ public class ActivityGuideTracker {
     }
 
     /**
-     * Returns true if the given activity or fragment has not been visited by the user yet,
-     * false otherwise.
-     * @param activityOrFragmentName The name of the activity or fragment to check.
-     * @return True if the activity or fragment has not been visited yet, false otherwise.
-     */
-    public boolean isUnvisited(String activityOrFragmentName) {
-        return mPrefs.getBoolean(activityOrFragmentName, false);
-    }
-
-    /**
-     * Sets the visited status of the given activity or fragment to false.
-     * @param activityOrFragmentName The name of the activity or fragment to mark as unvisited.
-     */
-    public void setUnvisited(String activityOrFragmentName) {
-        mPrefs.edit().putBoolean(activityOrFragmentName, false).apply();
-    }
-
-    /**
      Clear all saved activity/fragment visit status from the shared preferences.
      */
     public void clearActivitiesStatus() {

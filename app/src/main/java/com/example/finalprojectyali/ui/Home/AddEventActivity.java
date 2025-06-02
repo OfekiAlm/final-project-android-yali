@@ -25,6 +25,7 @@ import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsControllerCompat;
 
 import com.example.finalprojectyali.Extras.EventRepository;
+import com.example.finalprojectyali.Extras.GuiderDialog;
 import com.example.finalprojectyali.Models.Event;
 import com.example.finalprojectyali.R;
 import com.example.finalprojectyali.databinding.ActivityAddEventBinding;
@@ -73,6 +74,9 @@ public class AddEventActivity extends AppCompatActivity {
         
         // Animate cards on entry
         animateCardsOnEntry();
+
+        new GuiderDialog(this, "AddEventActivity",
+                "Fill in the event details, set the date and time, and create your new event.").startDialog();
     }
 
     private void animateCardsOnEntry() {

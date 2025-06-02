@@ -25,6 +25,7 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.finalprojectyali.Adapters.IngredientsAdapter;
 import com.example.finalprojectyali.Extras.EventRepository;
+import com.example.finalprojectyali.Extras.GuiderDialog;
 import com.example.finalprojectyali.Models.Event;
 import com.example.finalprojectyali.Models.Ingredient;
 import com.example.finalprojectyali.R;
@@ -77,6 +78,21 @@ public class EventActivity extends AppCompatActivity
         myName = FirebaseAuth.getInstance().getCurrentUser().getDisplayName();
         isOwner = myUid != null && myUid.equals(event.getOwnerUid());
 
+        // Fetch the actual user name from Users database
+        if (myUid != null) {
+            DatabaseReference userRef = FirebaseDatabase.getInstance()
+                    .getReference("Users").child(myUid);
+            userRef.child("name").get().addOnSuccessListener(nameSnapshot -> {
+                String userName = nameSnapshot.getValue(String.class);
+                if (userName != null && !userName.trim().isEmpty()) {
+                    myName = userName;
+                    android.util.Log.d("EventActivity", "Updated myName from database: " + myName);
+                }
+            }).addOnFailureListener(e -> {
+                android.util.Log.e("EventActivity", "Failed to fetch user name", e);
+            });
+        }
+
         // Debug logging
         android.util.Log.d("EventActivity", "myUid: " + myUid);
         android.util.Log.d("EventActivity", "event.getOwnerUid(): " + event.getOwnerUid());
@@ -88,12 +104,21 @@ public class EventActivity extends AppCompatActivity
         bindViews();
         populateHeader();
         listenLive();
+
+        new GuiderDialog(this, "EventActivity",
+                "Manage your event ingredients here. Add items to your shopping list, check them off when acquired, and coordinate with other members.").startDialog();
     }
 
     private void bindViews() {
         toolbar = findViewById(R.id.eventToolbar);
         setSupportActionBar(toolbar);
         toolbar.setNavigationOnClickListener(v -> finish());
+        
+        // Ensure we always show event name, not app name
+        if (getSupportActionBar() != null) {
+            getSupportActionBar().setDisplayShowTitleEnabled(true);
+            getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+        }
 
         totalTv = findViewById(R.id.ev_total_tv);
         perTv = findViewById(R.id.ev_per_member_tv);
@@ -101,6 +126,7 @@ public class EventActivity extends AppCompatActivity
 
         ingRv = findViewById(R.id.ev_ingredients_rv);
         ingAdapter = new IngredientsAdapter(this, ingList, this);
+        ingAdapter.setUserInfo(myUid, isOwner);
         ingRv.setLayoutManager(new LinearLayoutManager(this));
         ingRv.setAdapter(ingAdapter);
 
@@ -113,8 +139,22 @@ public class EventActivity extends AppCompatActivity
         String dt = new SimpleDateFormat("dd MMM yyyy, HH:mm",
                 Locale.getDefault()).format(d);
 
-        toolbar.setTitle(event.getName());
+        // Always set the toolbar title to event name
+        String eventName = event.getName();
+        if (eventName == null || eventName.trim().isEmpty()) {
+            eventName = "Event"; // fallback
+        }
+        
+        toolbar.setTitle(eventName);
         toolbar.setSubtitle(dt);
+        
+        // Also set it via support action bar to be extra sure
+        if (getSupportActionBar() != null) {
+            getSupportActionBar().setTitle(eventName);
+            getSupportActionBar().setSubtitle(dt);
+        }
+        
+        android.util.Log.d("EventActivity", "Setting toolbar title to: " + eventName);
 
         TextView dateTv = findViewById(R.id.ev_date_tv);
         TextView locTv = findViewById(R.id.ev_loc_tv);
@@ -340,6 +380,22 @@ public class EventActivity extends AppCompatActivity
     @Override
     public void onIngredientChecked(int pos, boolean checked) {
         Ingredient ing = ingList.get(pos);
+        
+        // Check if user can acquire/free this ingredient
+        if (checked && ing.isAcquired() && !myUid.equals(ing.getAcquiredByUID())) {
+            Toast.makeText(this, "This ingredient is already acquired by " + ing.getAcquiredByName(), Toast.LENGTH_SHORT).show();
+            // Reset checkbox to original state
+            ingAdapter.notifyItemChanged(pos);
+            return;
+        }
+        
+        if (!checked && ing.isAcquired() && !myUid.equals(ing.getAcquiredByUID()) && !isOwner) {
+            Toast.makeText(this, "Only " + ing.getAcquiredByName() + " or the admin can free this ingredient", Toast.LENGTH_SHORT).show();
+            // Reset checkbox to original state
+            ingAdapter.notifyItemChanged(pos);
+            return;
+        }
+
         DatabaseReference ref = evRef.child("ingredients").child(ing.getKey());
 
         ref.runTransaction(new Transaction.Handler() {
@@ -350,6 +406,7 @@ public class EventActivity extends AppCompatActivity
                 if (i == null) return Transaction.abort();
                 i.setAcquired(checked);
                 i.setAcquiredByUID(checked ? myUid : null);
+                i.setAcquiredByName(checked ? myName : null);
                 i.setAcquiredAt(checked ? System.currentTimeMillis() : 0);
                 cur.setValue(i);
                 return Transaction.success(cur);
@@ -364,22 +421,113 @@ public class EventActivity extends AppCompatActivity
 
     @Override
     public void onItemClick(int pos) {
-        if (canModify(ingList.get(pos))) showIngredientDialog(ingList.get(pos));
+        Ingredient ing = ingList.get(pos);
+        if (canEdit(ing)) {
+            showIngredientDialog(ing);
+        } else {
+            String message = getPermissionMessage(ing, "edit");
+            Toast.makeText(this, message, Toast.LENGTH_LONG).show();
+        }
     }
 
     @Override
     public void onItemLongClick(int pos) {
-        if (!canModify(ingList.get(pos))) return;
+        Ingredient ing = ingList.get(pos);
+        
+        if (!canEdit(ing) && !canDelete(ing)) {
+            String message = getPermissionMessage(ing, "modify");
+            Toast.makeText(this, message, Toast.LENGTH_LONG).show();
+            return;
+        }
+
+        // Build options based on permissions
+        java.util.List<String> options = new java.util.ArrayList<>();
+        if (canEdit(ing)) {
+            options.add("Edit");
+        }
+        if (canDelete(ing)) {
+            options.add("Delete");
+        }
+
         new AlertDialog.Builder(this)
-                .setItems(new String[]{"Edit", "Delete"}, (d, i) -> {
-                    if (i == 0) showIngredientDialog(ingList.get(pos));
-                    else evRef.child("ingredients")
-                            .child(ingList.get(pos).getKey()).removeValue();
+                .setItems(options.toArray(new String[0]), (d, i) -> {
+                    String selectedOption = options.get(i);
+                    if ("Edit".equals(selectedOption)) {
+                        showIngredientDialog(ing);
+                    } else if ("Delete".equals(selectedOption)) {
+                        confirmDelete(ing);
+                    }
                 }).show();
     }
 
-    private boolean canModify(Ingredient ing) {
-        return isOwner || myUid.equals(ing.getAcquiredByUID());
+    /**
+     * Check if user can edit this ingredient
+     * Rules: Admin can edit any ingredient, users can only edit ingredients they created
+     */
+    private boolean canEdit(Ingredient ing) {
+        if (isOwner) return true; // Admin can edit any ingredient
+        if (myUid == null) return false;
+        return myUid.equals(ing.getCreatedByUID()); // User can only edit ingredients they created
+    }
+
+    /**
+     * Check if user can delete this ingredient
+     * Rules: Same as edit, but also check if ingredient is acquired
+     */
+    private boolean canDelete(Ingredient ing) {
+        if (!canEdit(ing)) return false; // Must be able to edit to delete
+        
+        // If ingredient is acquired, it can't be deleted unless freed first
+        if (ing.isAcquired()) {
+            return false;
+        }
+        
+        return true;
+    }
+
+    /**
+     * Get appropriate permission message for user
+     */
+    private String getPermissionMessage(Ingredient ing, String action) {
+        if (isOwner) {
+            if (ing.isAcquired()) {
+                return "This ingredient has been acquired by " + ing.getAcquiredByName() + 
+                       ". Please ask them to free it first before making changes.";
+            }
+            return "Unknown permission issue.";
+        }
+        
+        if (ing.getCreatedByUID() != null && !myUid.equals(ing.getCreatedByUID())) {
+            String creatorName = ing.getCreatedByName() != null ? ing.getCreatedByName() : "another member";
+            return "You can only " + action + " ingredients that you added. This ingredient was added by " + creatorName + ".";
+        }
+        
+        if (ing.isAcquired() && !myUid.equals(ing.getAcquiredByUID())) {
+            return "This ingredient has been acquired by " + ing.getAcquiredByName() + 
+                   ". It cannot be modified until they free it.";
+        }
+        
+        return "You don't have permission to " + action + " this ingredient.";
+    }
+
+    /**
+     * Confirm deletion with user
+     */
+    private void confirmDelete(Ingredient ing) {
+        new AlertDialog.Builder(this)
+                .setTitle("Delete Ingredient")
+                .setMessage("Are you sure you want to delete \"" + ing.getName() + "\"?")
+                .setPositiveButton("Delete", (d, w) -> {
+                    evRef.child("ingredients").child(ing.getKey()).removeValue()
+                            .addOnSuccessListener(aVoid -> {
+                                Toast.makeText(this, "Ingredient deleted", Toast.LENGTH_SHORT).show();
+                            })
+                            .addOnFailureListener(e -> {
+                                Toast.makeText(this, "Failed to delete ingredient", Toast.LENGTH_SHORT).show();
+                            });
+                })
+                .setNegativeButton("Cancel", null)
+                .show();
     }
 
     /* add / edit ingredient */
@@ -416,7 +564,10 @@ public class EventActivity extends AppCompatActivity
                             evRef.child("ingredients").child(existing.getKey()).setValue(existing);
                         } else {
                             String key = evRef.child("ingredients").push().getKey();
-                            Ingredient ing = new Ingredient(name, pr, qty, false, myUid, myName, 0);
+                            long currentTime = System.currentTimeMillis();
+                            Ingredient ing = new Ingredient(name, pr, qty, false, 
+                                    myUid, myName, currentTime, // Creator info
+                                    null, null, 0);  // Acquisition info (empty initially)
                             ing.setKey(key);
                             evRef.child("ingredients").child(key).setValue(ing);
                         }
@@ -466,25 +617,41 @@ public class EventActivity extends AppCompatActivity
     }
     
     private Event fetchEventFromFirebase(String eventId) {
-        // This is a simplified synchronous approach for now
-        // In production, this should be done asynchronously
-        try {
-            DatabaseReference eventRef = FirebaseDatabase.getInstance()
-                    .getReference("Events").child(eventId);
-            
-            // For now, return a minimal event with the ID and let Firebase listener update it
-            Event tempEvent = new Event();
-            tempEvent.setKey(eventId);
-            tempEvent.setName("Loading...");
-            tempEvent.setDescription("");
-            tempEvent.setLocationAddress("");
-            tempEvent.setOwnerUid(""); // Will be updated by Firebase listener
-            tempEvent.setEventDate(System.currentTimeMillis());
-            
-            return tempEvent;
-        } catch (Exception e) {
-            android.util.Log.e("EventActivity", "Error fetching event from Firebase", e);
-            return null;
+        // Create a temporary event with the provided event name if available
+        Event tempEvent = new Event();
+        tempEvent.setKey(eventId);
+        
+        // Use event name from intent if available, otherwise use a placeholder
+        Intent intent = getIntent();
+        String eventName = intent.getStringExtra("event_name");
+        if (eventName != null && !eventName.trim().isEmpty()) {
+            tempEvent.setName(eventName);
+            android.util.Log.d("EventActivity", "Using event name from intent: " + eventName);
+        } else {
+            tempEvent.setName("Loading Event...");
+            android.util.Log.d("EventActivity", "No event name in intent, using placeholder");
         }
+        
+        tempEvent.setDescription("");
+        tempEvent.setLocationAddress("");
+        tempEvent.setOwnerUid(""); // Will be updated by Firebase listener
+        tempEvent.setEventDate(System.currentTimeMillis());
+        
+        // Immediately try to fetch the real event name from Firebase
+        DatabaseReference eventRef = FirebaseDatabase.getInstance()
+                .getReference("Events").child(eventId);
+        
+        eventRef.child("name").get().addOnSuccessListener(nameSnapshot -> {
+            String realEventName = nameSnapshot.getValue(String.class);
+            if (realEventName != null && !realEventName.trim().isEmpty()) {
+                tempEvent.setName(realEventName);
+                populateHeader(); // Update UI immediately with correct name
+                android.util.Log.d("EventActivity", "Updated event name from Firebase: " + realEventName);
+            }
+        }).addOnFailureListener(e -> {
+            android.util.Log.e("EventActivity", "Failed to fetch event name", e);
+        });
+        
+        return tempEvent;
     }
 }

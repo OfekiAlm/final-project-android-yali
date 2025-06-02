@@ -5,6 +5,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.CheckBox;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
@@ -40,6 +41,9 @@ public class IngredientsAdapter
     private final IngredientActions ingredientActions;
     private final SimpleDateFormat dateFormat =
             new SimpleDateFormat("dd MMM yyyy", Locale.getDefault());
+    
+    private String currentUserUid;
+    private boolean isOwner;
 
     public IngredientsAdapter(Context ctx,
                               List<Ingredient> list,
@@ -47,6 +51,14 @@ public class IngredientsAdapter
         this.context = ctx;
         this.ingredientList = list;
         this.ingredientActions = actions;
+    }
+
+    /**
+     * Update user information for permission checking
+     */
+    public void setUserInfo(String userUid, boolean isEventOwner) {
+        this.currentUserUid = userUid;
+        this.isOwner = isEventOwner;
     }
 
     /* ─── Required overrides ───────────────────────────────── */
@@ -67,25 +79,43 @@ public class IngredientsAdapter
         holder.priceTextView.setText(
                 context.getString(R.string.ingredient_price_format, ing.getPrice()));
 
+        // Show creator information
+        if (ing.getCreatedByName() != null && !ing.getCreatedByName().trim().isEmpty()) {
+            holder.createdByTextView.setVisibility(View.VISIBLE);
+            holder.createdByTextView.setText("Added by " + ing.getCreatedByName());
+        } else {
+            holder.createdByTextView.setVisibility(View.GONE);
+        }
+
         holder.acquiredCheckBox.setOnCheckedChangeListener(null);
         holder.acquiredCheckBox.setChecked(ing.isAcquired());
+        
+        // Enable/disable checkbox based on user permissions
+        boolean canInteractWithCheckbox = canUserInteractWithCheckbox(ing);
+        holder.acquiredCheckBox.setEnabled(canInteractWithCheckbox);
+        holder.acquiredCheckBox.setAlpha(canInteractWithCheckbox ? 1.0f : 0.5f);
 
         if (ing.isAcquired()) {
             holder.nameTextView.setPaintFlags(
                     holder.nameTextView.getPaintFlags()
                             | android.graphics.Paint.STRIKE_THRU_TEXT_FLAG);
-            holder.acquiredByTextView.setVisibility(View.VISIBLE);
-            holder.acquiredDateTextView.setVisibility(View.VISIBLE);
-            holder.acquiredByTextView.setText(
-                    context.getString(R.string.ingredient_acquired_by,
-                            ing.getAcquiredByUID() == null ? "Unknown" : ing.getAcquiredByName()));
-            holder.acquiredDateTextView.setText(formatDate(ing.getAcquiredAt()));
+            
+            // Show inline acquired name
+            if (ing.getAcquiredByName() != null && !ing.getAcquiredByName().isEmpty()) {
+                holder.acquiredNameTextView.setVisibility(View.VISIBLE);
+                holder.acquiredNameTextView.setText("by " + ing.getAcquiredByName());
+            } else {
+                holder.acquiredNameTextView.setVisibility(View.GONE);
+            }
+            
+            // Hide expanded container since we're showing inline name
+            holder.acquiredInfoContainer.setVisibility(View.GONE);
         } else {
             holder.nameTextView.setPaintFlags(
                     holder.nameTextView.getPaintFlags()
                             & ~android.graphics.Paint.STRIKE_THRU_TEXT_FLAG);
-            holder.acquiredByTextView.setVisibility(View.GONE);
-            holder.acquiredDateTextView.setVisibility(View.GONE);
+            holder.acquiredNameTextView.setVisibility(View.GONE);
+            holder.acquiredInfoContainer.setVisibility(View.GONE);
         }
 
         holder.acquiredCheckBox.setOnCheckedChangeListener(
@@ -100,6 +130,23 @@ public class IngredientsAdapter
             ingredientActions.onItemLongClick(holder.getBindingAdapterPosition());
             return true;
         });
+    }
+
+    /**
+     * Check if current user can interact with the checkbox for this ingredient
+     */
+    private boolean canUserInteractWithCheckbox(Ingredient ing) {
+        if (currentUserUid == null) return false;
+        
+        // If ingredient is not acquired, anyone can acquire it
+        if (!ing.isAcquired()) return true;
+        
+        // If ingredient is acquired, only the person who acquired it or admin can free it
+        if (ing.isAcquired()) {
+            return currentUserUid.equals(ing.getAcquiredByUID()) || isOwner;
+        }
+        
+        return false;
     }
 
     @Override
@@ -122,9 +169,10 @@ public class IngredientsAdapter
     /* ─── ViewHolder ───────────────────────────────────────── */
     static class IngredientViewHolder extends RecyclerView.ViewHolder {
         TextView nameTextView, quantityTextView, priceTextView,
-                acquiredByTextView, acquiredDateTextView;
+                acquiredByTextView, acquiredDateTextView, acquiredNameTextView, createdByTextView;
         CheckBox acquiredCheckBox;
         ConstraintLayout layout;
+        LinearLayout acquiredInfoContainer;
 
         IngredientViewHolder(@NonNull View itemView) {
             super(itemView);
@@ -133,8 +181,11 @@ public class IngredientsAdapter
             priceTextView = itemView.findViewById(R.id.ingredientPriceTextView);
             acquiredByTextView = itemView.findViewById(R.id.ingredientAcquiredByTextView);
             acquiredDateTextView = itemView.findViewById(R.id.ingredientAcquiredDateTextView);
+            acquiredNameTextView = itemView.findViewById(R.id.ingredientAcquiredNameTextView);
+            createdByTextView = itemView.findViewById(R.id.ingredientCreatedByTextView);
             acquiredCheckBox = itemView.findViewById(R.id.ingredientAcquiredCheckBox);
             layout = itemView.findViewById(R.id.ingredientItemLayout);
+            acquiredInfoContainer = itemView.findViewById(R.id.acquiredInfoContainer);
         }
     }
 }

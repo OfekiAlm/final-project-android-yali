@@ -18,6 +18,11 @@ public class Ingredient {
     private double price;
     private int quantity;
 
+    /* Creator info ------------------------------------------------------- */
+    private String createdByUID;   // UID of the user who created this ingredient
+    private String createdByName;  // Name of the user who created this ingredient
+    private long createdAt;        // epoch-ms when created
+
     /* Acquisition info --------------------------------------------------- */
     private boolean acquired;     // true if already bought
     private String acquiredByUID;   // UId of the buyer
@@ -39,6 +44,9 @@ public class Ingredient {
                       double price,
                       int quantity,
                       boolean acquired,
+                      String createdByUID,
+                      String createdByName,
+                      long createdAt,
                       String acquiredByUID,
                       String acquiredByName,
                       long acquiredAt) {
@@ -47,6 +55,9 @@ public class Ingredient {
         this.price = price;
         this.quantity = quantity;
         this.acquired = acquired;
+        this.createdByUID = createdByUID;
+        this.createdByName = createdByName;
+        this.createdAt = createdAt;
         this.acquiredByUID = acquiredByUID;
         this.acquiredByName = acquiredByName;
         this.acquiredAt = acquiredAt;
@@ -123,6 +134,33 @@ public class Ingredient {
     }
 
     /* ------------------------------------------------------------------- */
+    /*  Creator getters / setters                                          */
+    /* ------------------------------------------------------------------- */
+    public String getCreatedByUID() {
+        return createdByUID;
+    }
+
+    public void setCreatedByUID(String createdByUID) {
+        this.createdByUID = createdByUID;
+    }
+
+    public String getCreatedByName() {
+        return createdByName;
+    }
+
+    public void setCreatedByName(String createdByName) {
+        this.createdByName = createdByName;
+    }
+
+    public long getCreatedAt() {
+        return createdAt;
+    }
+
+    public void setCreatedAt(long createdAt) {
+        this.createdAt = createdAt;
+    }
+
+    /* ------------------------------------------------------------------- */
     /*  Debug print                                                        */
     /* ------------------------------------------------------------------- */
     @Override
@@ -132,6 +170,8 @@ public class Ingredient {
                 ", name='" + name + '\'' +
                 ", price=" + price +
                 ", quantity=" + quantity +
+                ", createdBy='" + createdByUID + '\'' +
+                ", createdAt=" + createdAt +
                 ", acquired=" + acquired +
                 ", acquiredBy='" + acquiredByUID + '\'' +
                 ", acquiredAt=" + acquiredAt +

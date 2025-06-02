@@ -3,7 +3,9 @@ package com.example.finalprojectyali.ui.Home;
 import android.annotation.SuppressLint;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.pm.PackageManager;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 import android.view.MenuItem;
 import android.view.View;
@@ -14,6 +16,8 @@ import androidx.appcompat.app.ActionBarDrawerToggle;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.app.AppCompatDelegate;
 import androidx.appcompat.widget.Toolbar;
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
 import androidx.core.view.GravityCompat;
 import androidx.drawerlayout.widget.DrawerLayout;
 import androidx.fragment.app.Fragment;
@@ -23,6 +27,7 @@ import com.example.finalprojectyali.Extras.GuiderDialog;
 import com.example.finalprojectyali.Extras.Receivers.AirplaneModeReceiver;
 import com.example.finalprojectyali.Models.User;
 import com.example.finalprojectyali.R;
+import com.example.finalprojectyali.Extras.Services.NotificationListenerService;
 import com.example.finalprojectyali.databinding.ActivityMainBinding;
 import com.example.finalprojectyali.ui.Auth.LoginActivity;
 import com.example.finalprojectyali.ui.Home.Fragments.EventsFragment;
@@ -37,6 +42,7 @@ import com.google.firebase.database.FirebaseDatabase;
 
 public class MainActivity extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener, FirebaseCallback {
 
+    private static final int NOTIFICATION_PERMISSION_REQUEST_CODE = 1001;
     private ActivityMainBinding binding;
     private DrawerLayout drawerLayout;
     private NavigationView navigationView;
@@ -56,6 +62,16 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         
         // Always use dark mode
         AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES);
+        
+        // Request notification permission for Android 13+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            if (ContextCompat.checkSelfPermission(this, android.Manifest.permission.POST_NOTIFICATIONS) 
+                    != PackageManager.PERMISSION_GRANTED) {
+                ActivityCompat.requestPermissions(this, 
+                        new String[]{android.Manifest.permission.POST_NOTIFICATIONS}, 
+                        NOTIFICATION_PERMISSION_REQUEST_CODE);
+            }
+        }
         
         current_user = new User();
         getUserDetails(this);
@@ -102,6 +118,9 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
         mAuth = FirebaseAuth.getInstance();
         airplaneModeReceiver = new AirplaneModeReceiver();
+
+        // Start notification listener service
+        NotificationListenerService.start(this);
 
         new GuiderDialog(this, "MainActivity",
                 "Welcome! This is your events dashboard.").startDialog();
@@ -171,6 +190,12 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         super.onStart();
         FirebaseUser u = mAuth.getCurrentUser();
         if (u == null) startActivity(new Intent(this, LoginActivity.class));
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        // Service will handle its own cleanup when app is closed
     }
 
     /* ───────────────── Firebase helper ───────────────── */

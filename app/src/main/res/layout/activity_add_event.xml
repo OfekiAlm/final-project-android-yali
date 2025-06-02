@@ -91,7 +91,6 @@
             android:orientation="vertical"
             android:paddingTop="8dp"
             android:paddingBottom="100dp">
-
             <!-- Event Details Card -->
             <androidx.cardview.widget.CardView
                 android:id="@+id/event_details_card"

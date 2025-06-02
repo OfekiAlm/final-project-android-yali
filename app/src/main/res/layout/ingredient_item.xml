@@ -45,10 +45,29 @@
             android:fontFamily="sans-serif-medium"
             android:textColor="#202020"
             android:textSize="18sp"
-            app:layout_constraintEnd_toStartOf="@+id/ingredientAcquiredCheckBox"
+            app:layout_constraintEnd_toStartOf="@+id/ingredientAcquiredNameTextView"
             app:layout_constraintStart_toEndOf="@+id/iconBackground"
             app:layout_constraintTop_toTopOf="@+id/iconBackground"
             tools:text="Fresh Milk" />
+
+        <!-- Acquired by name (shown only when acquired) -->
+        <TextView
+            android:id="@+id/ingredientAcquiredNameTextView"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="8dp"
+            android:background="@drawable/quantity_badge_background"
+            android:fontFamily="sans-serif-medium"
+            android:paddingHorizontal="8dp"
+            android:paddingVertical="2dp"
+            android:textColor="@color/success_color"
+            android:textSize="12sp"
+            android:textStyle="bold"
+            android:visibility="gone"
+            app:layout_constraintEnd_toStartOf="@+id/ingredientAcquiredCheckBox"
+            app:layout_constraintTop_toTopOf="@+id/ingredientNameTextView"
+            tools:text="by Ofek"
+            tools:visibility="visible" />
 
         <!-- Quantity and Price Container -->
         <LinearLayout
@@ -89,6 +108,22 @@
                 tools:text="₪ 3.50 / item" />
         </LinearLayout>
 
+        <!-- Creator info -->
+        <TextView
+            android:id="@+id/ingredientCreatedByTextView"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:textColor="@color/text_secondary"
+            android:textSize="12sp"
+            android:textStyle="italic"
+            android:visibility="gone"
+            app:layout_constraintEnd_toEndOf="@+id/detailsContainer"
+            app:layout_constraintStart_toStartOf="@+id/detailsContainer"
+            app:layout_constraintTop_toBottomOf="@+id/detailsContainer"
+            tools:text="Added by Ofek"
+            tools:visibility="visible" />
+
         <!-- Modern Checkbox -->
         <com.google.android.material.checkbox.MaterialCheckBox
             android:id="@+id/ingredientAcquiredCheckBox"
@@ -111,7 +146,7 @@
             android:visibility="gone"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/iconBackground"
+            app:layout_constraintTop_toBottomOf="@+id/ingredientCreatedByTextView"
             tools:visibility="visible">
 
             <!-- Acquired by -->

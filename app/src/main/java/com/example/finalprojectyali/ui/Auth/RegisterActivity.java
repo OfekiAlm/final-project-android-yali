@@ -28,6 +28,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.example.finalprojectyali.Extras.ActivityGuideTracker;
+import com.example.finalprojectyali.Extras.GuiderDialog;
 import com.example.finalprojectyali.Models.User;
 import com.example.finalprojectyali.R;
 import com.example.finalprojectyali.ui.Home.MainActivity;
@@ -97,6 +98,9 @@ public class RegisterActivity extends AppCompatActivity {
         ensureNotificationPermission();      // #3 notifications (Android 13 +)
 
         new ActivityGuideTracker(this).clearActivitiesStatus(); // #4 onboarding reset
+
+        new GuiderDialog(this, "RegisterActivity",
+                "Create your account by filling in your details and adding a profile picture.").startDialog();
     }
 
     /* -------------------------------------------------- init -------------------------------------------------- */
@@ -191,7 +195,7 @@ public class RegisterActivity extends AppCompatActivity {
                         Toast.makeText(this, "Notifications enabled", Toast.LENGTH_SHORT).show();
                     } else {
                         Toast.makeText(this,
-                                "App can’t show reminders unless you allow notifications",
+                                "App can't show reminders unless you allow notifications",
                                 Toast.LENGTH_LONG).show();
                     }
                 });

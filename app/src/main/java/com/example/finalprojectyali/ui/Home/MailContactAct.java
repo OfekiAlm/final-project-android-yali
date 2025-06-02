@@ -12,6 +12,7 @@ import android.widget.Toast;
 
 import com.example.finalprojectyali.R;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
+import com.example.finalprojectyali.Extras.GuiderDialog;
 
 /**
  The MailContactAct class is an activity that allows the user to send an email to a specified recipient.
@@ -42,6 +43,9 @@ public class MailContactAct extends AppCompatActivity {
         
         init();
         setupAnimations();
+
+        new GuiderDialog(this, "MailContactAct",
+                "Send us your feedback, questions, or suggestions. Fill in the subject and message, then tap the send button.").startDialog();
 
         submitMail.setOnClickListener(view -> {
             // Add button press animation

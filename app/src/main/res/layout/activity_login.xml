@@ -141,15 +141,6 @@
                             android:inputType="textPassword" />
                     </com.google.android.material.textfield.TextInputLayout>
 
-                    <!-- Forgot Password Link -->
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_gravity="end"
-                        android:layout_marginBottom="24dp"
-                        android:text="Forgot Password?"
-                        android:textColor="@color/primary_color"
-                        android:textSize="14sp" />
 
                     <!-- Login Button -->
                     <com.google.android.material.button.MaterialButton

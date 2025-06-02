@@ -4,6 +4,7 @@ package com.example.finalprojectyali.ui.Auth;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 
+import com.example.finalprojectyali.Extras.GuiderDialog;
 import com.example.finalprojectyali.ui.Home.MainActivity;
 import com.example.finalprojectyali.R;
 import com.google.android.material.textfield.TextInputEditText;
@@ -57,6 +58,9 @@ public class LoginActivity extends AppCompatActivity {
         mAuth = FirebaseAuth.getInstance();
 
         init();
+
+        new GuiderDialog(this, "LoginActivity",
+                "Enter your email and password to sign in to your account.").startDialog();
     }
 
     /**
