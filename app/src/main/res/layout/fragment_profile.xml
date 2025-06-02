@@ -59,8 +59,7 @@
                         android:fontFamily="@font/bungee"
                         android:text="Profile Information"
                         android:textColor="@color/primary_color"
-                        android:textSize="20sp"
-                        android:maxLength="9" />
+                        android:textSize="20sp" />
 
                     <!-- Email Field -->
                     <TextView
