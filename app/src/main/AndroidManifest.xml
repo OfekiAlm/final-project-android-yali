@@ -25,9 +25,7 @@
         android:supportsRtl="false"
         android:theme="@style/AppTheme"
         tools:targetApi="31">
-        <activity
-            android:name=".ui.Home.GroupActivity"
-            android:exported="false" />
+
         <activity
             android:name=".Extras.SplashActivity"
             android:exported="true">
@@ -44,13 +42,6 @@
                 android:name="android.app.lib_name"
                 android:value="" />
         </activity>
-        <activity
-            android:name=".ui.DetailedGroupAct"
-            android:exported="false">
-            <meta-data
-                android:name="android.app.lib_name"
-                android:value="" />
-        </activity>
 
         <receiver
             android:name=".Extras.Receivers.AirplaneModeReceiver"
@@ -59,10 +50,6 @@
                 <action android:name="android.intent.action.AIRPLANE_MODE" />
             </intent-filter>
         </receiver>
-
-        <receiver
-            android:name="com.example.finalprojectyali.Extras.Utils$NotificationPublisher"
-            android:exported="false" />
 
         <service
             android:name=".Extras.Services.NotificationListenerService"

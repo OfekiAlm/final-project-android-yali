@@ -66,7 +66,7 @@
             android:visibility="gone"
             app:layout_constraintEnd_toStartOf="@+id/ingredientAcquiredCheckBox"
             app:layout_constraintTop_toTopOf="@+id/ingredientNameTextView"
-            tools:text="by Ofek"
+            tools:text="by Yali"
             tools:visibility="visible" />
 
         <!-- Quantity and Price Container -->
@@ -121,7 +121,7 @@
             app:layout_constraintEnd_toEndOf="@+id/detailsContainer"
             app:layout_constraintStart_toStartOf="@+id/detailsContainer"
             app:layout_constraintTop_toBottomOf="@+id/detailsContainer"
-            tools:text="Added by Ofek"
+            tools:text="Added by Yali"
             tools:visibility="visible" />
 
         <!-- Modern Checkbox -->
@@ -160,7 +160,7 @@
                 android:textStyle="bold"
                 app:drawableStartCompat="@drawable/ic_baseline_check_circle"
                 app:drawableTint="@color/success_color"
-                tools:text="Acquired by: Ofek" />
+                tools:text="Acquired by: Yali" />
 
             <!-- Acquired date -->
             <TextView

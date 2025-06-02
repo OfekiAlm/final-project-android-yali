@@ -19,7 +19,6 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.example.finalprojectyali.Adapters.EventAdapter;
 import com.example.finalprojectyali.Adapters.RecyclerViewFunctionalities;
 import com.example.finalprojectyali.Extras.EventRepository;
-import com.example.finalprojectyali.Extras.Utils;
 import com.example.finalprojectyali.Models.Event;
 import com.example.finalprojectyali.Models.Event.Status;
 import com.example.finalprojectyali.R;

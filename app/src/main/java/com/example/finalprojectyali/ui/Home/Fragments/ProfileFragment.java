@@ -38,7 +38,7 @@ import de.hdodenhof.circleimageview.CircleImageView;
 
 /**
  ProfileFragment is a fragment that displays the user's profile details, including their image, email, and phone number.
- @author Ofek Almog
+ @author Yali Shem Tov
  */
 public class ProfileFragment extends Fragment {
 

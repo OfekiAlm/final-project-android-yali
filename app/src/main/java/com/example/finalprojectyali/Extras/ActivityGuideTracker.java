@@ -6,7 +6,7 @@ import android.content.SharedPreferences;
 /**
  * A utility class for tracking which activities or fragments have been visited
  * by the user in a mobile app.
- * @author Ofek Almog
+ * @author Yali Shem Tov
  */
 public class ActivityGuideTracker {
 

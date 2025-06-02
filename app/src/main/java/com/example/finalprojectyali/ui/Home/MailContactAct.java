@@ -17,7 +17,7 @@ import com.example.finalprojectyali.Extras.GuiderDialog;
 /**
  The MailContactAct class is an activity that allows the user to send an email to a specified recipient.
  It contains a title and body for the email, as well as a submit button that opens the email client to send the email.
- @author Ofek Almog
+ @author Yali Shem Tov
  */
 public class MailContactAct extends AppCompatActivity {
 
