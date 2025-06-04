@@ -51,11 +51,8 @@ public class NotificationListenerService extends Service {
         
         // For Android 8+ we need to run as foreground service
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            NotificationCompat.Builder builder = new NotificationCompat.Builder(this, CHANNEL_ID)
-                    .setContentTitle("Monitoring event notifications")
-                    .setContentText("You'll be notified of event updates")
-                    .setSmallIcon(android.R.drawable.ic_dialog_info)
-                    .setPriority(NotificationCompat.PRIORITY_MIN)
+            NotificationCompat.Builder builder = new NotificationCompat.Builder(this, CHANNEL_ID) // Use Notification.Builder for no notification
+                    .setPriority(NotificationCompat.PRIORITY_MIN) // Min priority for no sound/vibration
                     .setOngoing(true);
                     
             if (Build.VERSION.SDK_INT >= 34) { // Android 14+
@@ -220,9 +217,5 @@ public class NotificationListenerService extends Service {
         } else {
             context.startService(serviceIntent);
         }
-    }
-    
-    public static void stop(Context context) {
-        context.stopService(new Intent(context, NotificationListenerService.class));
     }
 } 
