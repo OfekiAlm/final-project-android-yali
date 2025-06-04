@@ -49,14 +49,6 @@ public class User {
     }
 
     /**
-     * Sets the email of the user.
-     * @param email the email to set
-     */
-    public void setEmail(String email) {
-        this.email = email;
-    }
-
-    /**
      * Returns the phone number of the user.
      * @return the phone number
      */
@@ -78,18 +70,5 @@ public class User {
      */
     public String getEmail() {
         return email;
-    }
-
-    /**
-     * Returns a string representation of the User object.
-     * @return a string representation of the User object
-     */
-    @Override
-    public String toString() {
-        return "User{" +
-                "phoneNumber='" + phoneNumber + '\'' +
-                ", name='" + name + '\'' +
-                ", email='" + email + '\'' +
-                '}';
     }
 }

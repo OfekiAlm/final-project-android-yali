@@ -159,22 +159,4 @@ public class Ingredient {
     public void setCreatedAt(long createdAt) {
         this.createdAt = createdAt;
     }
-
-    /* ------------------------------------------------------------------- */
-    /*  Debug print                                                        */
-    /* ------------------------------------------------------------------- */
-    @Override
-    public String toString() {
-        return "Ingredient{" +
-                "key='" + key + '\'' +
-                ", name='" + name + '\'' +
-                ", price=" + price +
-                ", quantity=" + quantity +
-                ", createdBy='" + createdByUID + '\'' +
-                ", createdAt=" + createdAt +
-                ", acquired=" + acquired +
-                ", acquiredBy='" + acquiredByUID + '\'' +
-                ", acquiredAt=" + acquiredAt +
-                '}';
-    }
 }

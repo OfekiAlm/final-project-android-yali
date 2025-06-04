@@ -73,7 +73,7 @@ public class EventsFragment extends Fragment implements RecyclerViewFunctionalit
         adPending = new EventAdapter(requireContext(), pending, this);
         adAvail = new EventAdapter(requireContext(), available, this);
 
-        ConcatAdapter concat = new ConcatAdapter(
+        ConcatAdapter concat = new ConcatAdapter( //מחבר את כל הרשימות לרשימה אחת
                 new SectionHeader("Going"), adGoing,
                 new SectionHeader("Pending"), adPending,
                 new SectionHeader("Available"), adAvail);
